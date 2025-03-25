@@ -22,7 +22,7 @@ from .wasserstein import Sliced_Wasserstein_Distance, Wasserstein_One_Dimension
 
 import time
 
-from otdd.pytorch.utils import generate_and_plot_data
+# from otdd.pytorch.utils import generate_and_plot_data
 
 class Embeddings_sOTDD():
 

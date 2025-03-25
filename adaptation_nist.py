@@ -4,7 +4,6 @@ import torch.nn as nn
 from otdd.pytorch.datasets import load_torchvision_data
 from otdd.pytorch.sotdd import compute_pairwise_distance
 from otdd.pytorch.distance import DatasetDistance
-from otdd.pytorch.method_gaussian import load_full_dataset
 from otdd.pytorch.moments import compute_label_stats
 import os
 import torch.nn.functional as F
@@ -16,7 +15,6 @@ from sklearn.linear_model import LinearRegression
 from scipy import stats
 import json
 import pickle
-from trainer import *
 from wte.distance import WTE
 from scipy.spatial import distance
 from geoopt import Lorentz as Lorentz_geoopt
@@ -44,7 +42,7 @@ os.makedirs(parent_dir, exist_ok=True)
 os.makedirs(pretrained_path, exist_ok=True)
 os.makedirs(adapt_path, exist_ok=True)
 
-DEVICE = "cpu"
+DEVICE = "cuda"
 
 # Load data
 MAXSIZE_DIST = None
@@ -250,7 +248,7 @@ def compute_hswfs_distance(maxsamples=MAXSIZE_DIST, METADATA_DATASET=None, num_p
     return all_dist_dict
 
 
-def compute_sotdd_distance(maxsamples=MAXSIZE_DIST, num_projection=10000, METADATA_DATASET=None):
+def compute_sotdd_distance(maxsamples=MAXSIZE_DIST, num_moments=1, num_projection=10000, METADATA_DATASET=None):
 
     if METADATA_DATASET is None:
         METADATA_DATASET = create_dataset(maxsamples=maxsamples)
@@ -263,14 +261,14 @@ def compute_sotdd_distance(maxsamples=MAXSIZE_DIST, num_projection=10000, METADA
     kwargs = {
         "dimension": 28 * 28,
         "num_channels": 1,
-        "num_moments": 5,
+        "num_moments": num_moments,
         "use_conv": False,
         "precision": "float",
         "p": 2,
         "chunk": 1000
     }
 
-    sw_list = compute_pairwise_distance(list_D=list_dataset, device="cpu", num_projections=num_projection, **kwargs)
+    sw_list = compute_pairwise_distance(list_D=list_dataset, device=DEVICE, num_projections=num_projection, **kwargs)
 
     all_dist_dict = dict()
     for i in range(len(LIST_DATASETS)):
@@ -401,35 +399,36 @@ if __name__ == "__main__":
     METADATA_DATASET = create_dataset(maxsamples=MAXSIZE_DIST)
     
 
-    DIST_otdd = compute_otdd_gaussian_distance(METADATA_DATASET=METADATA_DATASET)
-    dist_file_path = f'{parent_dir}/otdd_gaussian_distance.json'
-    with open(dist_file_path, 'w') as json_file:
-        json.dump(DIST_otdd, json_file, indent=4)
+    # DIST_otdd = compute_otdd_gaussian_distance(METADATA_DATASET=METADATA_DATASET)
+    # dist_file_path = f'{parent_dir}/otdd_gaussian_distance.json'
+    # with open(dist_file_path, 'w') as json_file:
+    #     json.dump(DIST_otdd, json_file, indent=4)
 
 
-    DIST_otdd = compute_otdd_distance(METADATA_DATASET=METADATA_DATASET)
-    dist_file_path = f'{parent_dir}/otdd_exact_distance.json'
-    with open(dist_file_path, 'w') as json_file:
-        json.dump(DIST_otdd, json_file, indent=4)
+    # DIST_otdd = compute_otdd_distance(METADATA_DATASET=METADATA_DATASET)
+    # dist_file_path = f'{parent_dir}/otdd_exact_distance.json'
+    # with open(dist_file_path, 'w') as json_file:
+    #     json.dump(DIST_otdd, json_file, indent=4)
 
-
-    DIST_sotdd = compute_sotdd_distance(num_projection=10000, METADATA_DATASET=METADATA_DATASET)
-    dist_file_path = f'{parent_dir}/sotdd_distance.json'
-    with open(dist_file_path, 'w') as json_file:
-        json.dump(DIST_sotdd, json_file, indent=4)
-
-
-    DIST_sotdd = compute_wte_distance(METADATA_DATASET=METADATA_DATASET)
-    dist_file_path = f'{parent_dir}/wte_distance.json'
+    num_moments = 7
+    DIST_sotdd = compute_sotdd_distance(num_projection=10000, num_moments=num_moments, METADATA_DATASET=METADATA_DATASET)
+    dist_file_path = f'{parent_dir}/sotdd_distance_num_moments_{num_moments}.json'
     with open(dist_file_path, 'w') as json_file:
         json.dump(DIST_sotdd, json_file, indent=4)
 
+    # CUDA_VISIBLE_DEVICES=3 python3 adaptation_nist.py
 
-    DIST_sotdd = compute_hswfs_distance(num_proj=10000, METADATA_DATASET=METADATA_DATASET)
-    dist_file_path = f'{parent_dir}/hswfs_distance.json'
-    with open(dist_file_path, 'w') as json_file:
-        json.dump(DIST_sotdd, json_file, indent=4)
+    # DIST_sotdd = compute_wte_distance(METADATA_DATASET=METADATA_DATASET)
+    # dist_file_path = f'{parent_dir}/wte_distance.json'
+    # with open(dist_file_path, 'w') as json_file:
+    #     json.dump(DIST_sotdd, json_file, indent=4)
 
-    train_source(num_epoch_source=20, maxsamples=MAXSIZE_TRAINING, device=DEVICE)
-    training_and_adaptation(num_epochs=10, maxsamples=MAXSIZE_TRAINING, device=DEVICE)
+
+    # DIST_sotdd = compute_hswfs_distance(num_proj=10000, METADATA_DATASET=METADATA_DATASET)
+    # dist_file_path = f'{parent_dir}/hswfs_distance.json'
+    # with open(dist_file_path, 'w') as json_file:
+    #     json.dump(DIST_sotdd, json_file, indent=4)
+
+    # train_source(num_epoch_source=20, maxsamples=MAXSIZE_TRAINING, device=DEVICE)
+    # training_and_adaptation(num_epochs=10, maxsamples=MAXSIZE_TRAINING, device=DEVICE)
 
