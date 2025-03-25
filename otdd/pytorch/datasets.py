@@ -539,7 +539,8 @@ def load_torchvision_data(dataname, valid_size=0.0, splits=None, shuffle=True,
 
     return fold_loaders, {'train': train, 'test':test}
 
-def load_imagenet(datadir=None, resize=None, tiny=False, augmentations=False, maxsize=None, **kwargs):
+
+def load_imagenet(datadir=None, resize=None, tiny=False, augmentations=False, maxsize=None, maxsize_for_each_class=None, **kwargs):
     """ Load ImageNet dataset """
     if datadir is None and (not tiny):
         datadir = os.path.join(DATA_DIR,'imagenet')
@@ -564,14 +565,14 @@ def load_imagenet(datadir=None, resize=None, tiny=False, augmentations=False, ma
         ]
     else:
         train_transform_list = [
-            transforms.Resize(224), # revert back to 256
+            transforms.Resize(256), # revert back to 256
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize(*DATASET_NORMALIZATION['ImageNet'])
         ]
 
     valid_transform_list = [
-        transforms.Resize(224),# revert back to 256
+        transforms.Resize(256),# revert back to 256
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(*DATASET_NORMALIZATION['ImageNet'])
@@ -599,6 +600,7 @@ def load_imagenet(datadir=None, resize=None, tiny=False, augmentations=False, ma
     fold_loaders, dsets = load_torchvision_data('Imagenet', transform=[],
                                                 data=(train_data, valid_data),
                                                 maxsize=maxsize,
+                                                maxsize_for_each_class=maxsize_for_each_class,
                                                 **kwargs)
 
     return fold_loaders, dsets
