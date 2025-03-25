@@ -668,6 +668,16 @@ def generate_unit_convolution_projections(image_size=32, num_channels=3, num_pro
             U3 = nn.Conv2d(num_projection, num_projection, kernel_size=7, stride=1, padding=0, bias=False, groups=num_projection)
             U_list = [U1, U2, U3]
 
+    elif image_size == 224:
+
+            U1 = nn.Conv2d(num_channels, num_projection, kernel_size=3, stride=2, padding=1, bias=False)
+            U2 = nn.Conv2d(num_projection, num_projection, kernel_size=3, stride=2, padding=1, bias=False, groups=num_projection)
+            U3 = nn.Conv2d(num_projection, num_projection, kernel_size=3, stride=2, padding=1, bias=False, groups=num_projection)
+            U4 = nn.Conv2d(num_projection, num_projection, kernel_size=3, stride=2, padding=1, bias=False, groups=num_projection)
+            U5 = nn.Conv2d(num_projection, num_projection, kernel_size=3, stride=2, padding=1, bias=False, groups=num_projection)
+            U6 = nn.Conv2d(num_projection, num_projection, kernel_size=7, stride=1, padding=0, bias=False, groups=num_projection)
+            U_list = [U1, U2, U3, U4, U5, U6]
+
     for U in U_list:
         U.weight.data = torch.randn(U.weight.shape, device=device).type(dtype)
         U.weight.data = U.weight / torch.sqrt(torch.sum(U.weight ** 2,dim=[1,2,3],keepdim=True))
