@@ -5,22 +5,14 @@ from torchvision import models, transforms
 from torch.utils.data import DataLoader
 from otdd.pytorch.datasets import load_torchvision_data, load_imagenet
 import os
+import argparse
 
 # Device configuration
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Hyperparameters
-batch_size = 256
-num_epochs = 10
-learning_rate = 0.001
-
-
-parent_dir = "saved_split_imagenet"
-# datadir = "data/tiny-ImageNet/tiny-imagenet-200"
-datadir = "data/imagenet"
+print(DEVICE)
 
 # Load training and test data
-def load_data(task_num):
+def load_data(task_num, parent_dir):
     # Load task-specific training and test data
     data_path = f'{parent_dir}/data_task_{task_num}_size_10000.pt'
     labels_path = f'{parent_dir}/labels_task_{task_num}_size_10000.pt'
@@ -37,18 +29,18 @@ def load_data(task_num):
     return train_loader
 
 # Function to define the ResNet-18 model
-def get_model():
+def get_model(num_classes):
     resnet = models.resnet18(pretrained=False)
-    # resnet18.fc = nn.Linear(resnet18.fc.in_features, 200)  # Modify the final layer for your dataset
+    resnet.fc = nn.Linear(resnet.fc.in_features, num_classes)  # Modify the final layer for your dataset
     resnet = resnet.to(DEVICE)
     return resnet
 
 # Training and evaluation for each task
-def train_and_evaluate(task_num):
+def train_and_evaluate(task_num, parent_dir, datadir):
     print(f"Training for task {task_num}...")
     
     # Load data for this task
-    train_loader = load_data(task_num)
+    train_loader = load_data(task_num=task_num, parent_dir=parent_dir)
     imagenet = load_imagenet(datadir=datadir)
     test_loader = imagenet[0]["test"]
     
@@ -80,21 +72,18 @@ def train_and_evaluate(task_num):
             running_loss += loss.item()
         
         print(f"Task {task_num} - Epoch {epoch+1}/{num_epochs}, Loss: {running_loss/len(train_loader)}")
-        
-        accuracy = evaluate_model(model, test_loader)
-        
-        if accuracy > best_accuracy:
-            best_accuracy = accuracy
-            best_model_wts = model.state_dict()
-            best_epoch = epoch
-            print(f"Task {task_num} - New best accuracy: {accuracy}%")
-    
-            model_save_path = f'saved_split_tiny_imagenet/model_task_{task_num}.pt'
-            torch.save(best_model_wts, model_save_path)
-            
-            accuracy_save_path = f'saved_split_tiny_imagenet/accuracy_task_{task_num}.txt'
-            with open(accuracy_save_path, 'w') as f:
-                f.write(f"Best Accuracy: {best_accuracy} in epoch {best_epoch}%")
+
+
+    accuracy = evaluate_model(model, test_loader)
+    best_accuracy = accuracy
+    best_model_wts = model.state_dict()
+    best_epoch = epoch
+    print(f"Task {task_num} - New best accuracy: {accuracy}%")
+    model_save_path = f'{parent_dir}/model_task_{task_num}.pt'
+    torch.save(best_model_wts, model_save_path)
+    accuracy_save_path = f'{parent_dir}/accuracy_task_{task_num}.txt'
+    with open(accuracy_save_path, 'w') as f:
+        f.write(f"Best Accuracy: {best_accuracy} in epoch {best_epoch}%")
     
     print(f"Best model and accuracy for Task {task_num} saved!")
 
@@ -114,9 +103,43 @@ def evaluate_model(model, test_loader):
     print(f"Task {task_num} - Test Accuracy: {accuracy}%")
     return accuracy
 
-list_task = [8]
-for task_num in list_task:
-    train_and_evaluate(task_num)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Train models on specific tasks')
+    # Existing arguments
+    parser.add_argument('--tasks', type=int, nargs='+', default=[9],
+                        help='List of task numbers to train (e.g., 7 8 9)')
+    parser.add_argument('--batch_size', type=int, default=256,
+                        help='Input batch size')
+    parser.add_argument('--num_epochs', type=int, default=10,
+                        help='Number of training epochs')
+    parser.add_argument('--learning_rate', type=float, default=0.001,
+                        help='Learning rate')
+    
+    # New directory arguments
+    parser.add_argument('--parent_dir', type=str, default="saved_split_tiny_imagenet",
+                        help='Parent directory for task data and models')
+    parser.add_argument('--datadir', type=str, 
+                        default="data/tiny-ImageNet/tiny-imagenet-200",
+                        help='Base directory for dataset')
+
+    args = parser.parse_args()
+
+    parent_dir = args.parent_dir
+    datadir = args.datadir
+    batch_size = args.batch_size
+    num_epochs = args.num_epochs
+    learning_rate = args.learning_rate
+    
+    for task_num in args.tasks:
+        train_and_evaluate(task_num, parent_dir, datadir)
+
+if __name__ == "__main__":
+    main()
+
+if __name__ == "__main__":
+    main()
 
 # 0 1 2 3 4 5 6 7 8
 # CUDA_VISIBLE_DEVICES=2 python3 train_resnet18.py 01
