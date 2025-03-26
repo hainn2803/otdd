@@ -5,7 +5,8 @@ import os
 import time
 from datetime import datetime
 from torch.utils.data import DataLoader, TensorDataset
-from otdd.pytorch.method5 import compute_pairwise_distance
+# from otdd.pytorch.method5 import compute_pairwise_distance
+from otdd.pytorch.distance import DatasetDistance
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -86,36 +87,29 @@ def compute_pairwise_distances(parent_dir, output_file, source_task=None, target
     time_metrics['data_loading'] = time.time() - phase_start
 
     # Phase 2: Distance Computation
-    kwargs = {
-        "dimension": 224,
-        "num_channels": 3,
-        "num_moments": 5,
-        "use_conv": True,
-        "precision": "float",
-        "p": 2,
-        "chunk": 10000
-    }
-
-    results = {}
     for s, t in task_pairs:
-        # Create dataloaders for this pair
-        pair_dataloaders = [
-            DataLoader(task_datasets[s], batch_size=256, shuffle=True),
-            DataLoader(task_datasets[t], batch_size=256, shuffle=True)
-        ]
+        print(f"Computing OTDD between task {s} and task {t}...")
         
-        # Compute distance
-        distance_matrix, processing_time = compute_pairwise_distance(
-            list_D=pair_dataloaders,
-            num_projections=num_projections,
-            device=DEVICE,
-            evaluate_time=True,
-            **kwargs
+        # Dataloaders
+        source_loader = DataLoader(task_datasets[s], batch_size=256, shuffle=True)
+        target_loader = DataLoader(task_datasets[t], batch_size=256, shuffle=True)
+
+        dist_calc = DatasetDistance(
+            source_loader, 
+            target_loader,
+            inner_ot_method='exact',
+            debiased_loss=True,
+            p=2,
+            entreg=1e-3,
+            device=DEVICE
         )
-        
-        # Store distance for both directions
-        results[f"{s}-{t}"] = distance_matrix[0].item()
-        results[f"{t}-{s}"] = distance_matrix[0].item()
+
+        start_time = time.time()
+        distance = dist_calc.distance(maxsamples=num_samples).item()
+        end_time = time.time()
+
+        processing_time = end_time - start_time
+        print(f"DIST({s}, {t}) = {distance:.4f} (Time: {processing_time:.2f}s)")
 
         time_metrics['computation'] = processing_time
 
@@ -123,20 +117,17 @@ def compute_pairwise_distances(parent_dir, output_file, source_task=None, target
         phase_start = time.time()
         os.makedirs(output_file, exist_ok=True)
 
-        torch.save(distance_matrix, output_file + f"/sourcce_{s}_target_{t}.pt")
-    
-        with open(output_file + f"/sourcce_{s}_target_{t}.txt", "w") as f:
+        torch.save(distance, output_file + f"/otdd_sourcce_{s}_target_{t}.pt")
+        
+        with open(output_file + f"/otdd_sourcce_{s}_target_{t}.txt", "w") as f:
             f.write(f"Pairwise Distances ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n")
             f.write(f"Source Task: {source_task}\n")
             f.write(f"Target Tasks: {', '.join(map(str, target_tasks))}\n")
             f.write(f"Device: {DEVICE}\n")
             f.write(f"Time Metrics:\n")
             f.write(f"  Data Loading: {time_metrics['data_loading']:.2f}s\n")
-            f.write(f"  Computation: {processing_time:.2f}s\n\n")
-            
-            f.write("Task Pair\tDistance\n")
-            for pair in sorted(results.keys(), key=lambda x: list(map(int, x.split('-')))):
-                f.write(f"{pair}\t{results[pair]:.4f}\n")
+            f.write(f"  Computation: {time_metrics['computation']:.2f}s\n\n")
+            f.write(f"source: {s} target: {t}  distance: {distance.item()}\n")
         
         time_metrics['total'] = time.time() - total_start
 
