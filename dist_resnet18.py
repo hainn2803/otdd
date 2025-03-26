@@ -25,7 +25,7 @@ def get_task_numbers(parent_dir):
     except Exception as e:
         raise RuntimeError(f"Error scanning directory: {str(e)}")
 
-def load_task_data(task_num, parent_dir, sample_size=5000, seed=42):
+def load_task_data(task_num, parent_dir, sample_size=1000, seed=42):
     """Load task data with reproducible random sampling"""
     try:
         np.random.seed(seed)
