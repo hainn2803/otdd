@@ -83,7 +83,7 @@ def compute_pairwise_distances(parent_dir, output_file="pairwise_distances.txt")
 
 if __name__ == "__main__":
     # Configuration
-    parent_dir = "saved_split_tiny_imagenet"
+    parent_dir = "data/saved_split_tiny_imagenet"
     output_file = "task_distances.txt"
     
     # Compute and save distances
