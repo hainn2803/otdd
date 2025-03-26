@@ -160,7 +160,7 @@ if __name__ == "__main__":
                        help="Target tasks for fine-tuning (0-9)")
     parser.add_argument('--output', default="dist/task_distances.txt",
                        help='Output file name')
-    parser.add_argument('--parent_dir', default="saved_split_tiny_imagenet",
+    parser.add_argument('--parent_dir', default="data/saved_split_tiny_imagenet",
                        help='Parent directory with task data')
     
     args = parser.parse_args()
