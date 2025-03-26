@@ -138,9 +138,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-if __name__ == "__main__":
-    main()
-
 # 0 1 2 3 4 5 6 7 8
 # CUDA_VISIBLE_DEVICES=2 python3 train_resnet18.py 01
 # CUDA_VISIBLE_DEVICES=3 python3 train_resnet18.py 01
