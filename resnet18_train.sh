@@ -1,7 +1,7 @@
 #!/bin/bash -e
 #SBATCH --job-name=rebuttal
-#SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/train_flow_spp.out
-#SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/train_flow_spp.err
+#SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet.out
+#SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet.err
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --mem-per-gpu=125G
