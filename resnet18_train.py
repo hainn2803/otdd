@@ -11,8 +11,8 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {DEVICE}")
 
 def load_data(task_num, parent_dir, batch_size):
-    train_path = f'{parent_dir}/trainset_{task_num}.pt'
-    test_path = f'{parent_dir}/test{task_num}.pt'
+    train_path = f'{parent_dir}/data/trainset_{task_num}.pt'
+    test_path = f'{parent_dir}/data/test{task_num}.pt'
     
     train_data, train_labels = torch.load(train_path)
     test_data, test_labels = torch.load(test_path)
