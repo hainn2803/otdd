@@ -196,8 +196,8 @@ def train_and_evaluate(source_task, task_num, parent_dir, datadir, batch_size, n
         f.write(f"Best Loss Model Train Accuracy: {best_accuracy_train:.2f}%\n")
         f.write(f"Best Training Loss: {best_loss:.4f}\n")
         f.write(f"Final Training Loss: {train_history[-1]:.4f}\n")
-        f.write(f"Final Model Train Accuracy: {final_accuracy_test:.2f}%\n")
-        f.write(f"Best Loss Model Train Accuracy: {best_accuracy_test:.2f}%\n")
+        f.write(f"Final Model Test Accuracy: {final_accuracy_test:.2f}%\n")
+        f.write(f"Best Loss Model Test Accuracy: {best_accuracy_test:.2f}%\n")
 
 def evaluate_model(model, test_loader):
     correct, total = 0, 0

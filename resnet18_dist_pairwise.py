@@ -66,23 +66,18 @@ def load_task_data(task_num, parent_dir, sample_size=400, seed=42):
         
 
 
-def compute_pairwise_distances(parent_dir, output_file, source_task=None, target_tasks=None, num_samples=1000, num_projections=10000):
+def compute_pairwise_distances(parent_dir, output_file, num_samples=1000, num_projections=10000):
     """Compute distances between source task and multiple target tasks"""
     total_start = time.time()
     time_metrics = {}
     
     # Phase 1: Data Preparation and Validation
     phase_start = time.time()
-
-    # Create task pairs
-    task_pairs = [(source_task, t) for t in target_tasks if t != source_task]
-    unique_tasks = {source_task}.union(set(target_tasks))
-    
-    # Load data for needed tasks
-    task_datasets = {}
+    unique_tasks = get_task_numbers(parent_dir)
+    list_task_datasets = list()
     for task in unique_tasks:
-        task_datasets[task] = load_task_data(task_num=task, parent_dir=parent_dir, sample_size=num_samples)
-    
+        task_dataset = load_task_data(task_num=task, parent_dir=parent_dir, sample_size=num_samples)
+        list_task_datasets.append(DataLoader(task_dataset, batch_size=256, shuffle=True))
     time_metrics['data_loading'] = time.time() - phase_start
 
     # Phase 2: Distance Computation
@@ -96,68 +91,36 @@ def compute_pairwise_distances(parent_dir, output_file, source_task=None, target
         "chunk": 10000
     }
 
-    results = {}
-    for s, t in task_pairs:
-        # Create dataloaders for this pair
-        pair_dataloaders = [
-            DataLoader(task_datasets[s], batch_size=256, shuffle=True),
-            DataLoader(task_datasets[t], batch_size=256, shuffle=True)
-        ]
-        
-        # Compute distance
-        distance_matrix, processing_time = compute_pairwise_distance(
-            list_D=pair_dataloaders,
-            num_projections=num_projections,
-            device=DEVICE,
-            evaluate_time=True,
-            **kwargs
-        )
-        
-        # Store distance for both directions
-        results[f"{s}-{t}"] = distance_matrix[0].item()
-        results[f"{t}-{s}"] = distance_matrix[0].item()
+    # Compute distance
+    distance_matrix, processing_time = compute_pairwise_distance(
+        list_D=list_task_datasets,
+        num_projections=num_projections,
+        device=DEVICE,
+        evaluate_time=True,
+        **kwargs
+    )
 
-        time_metrics['computation'] = processing_time
+    time_metrics['computation'] = processing_time
 
-        # Phase 3: Results Saving
-        phase_start = time.time()
-        os.makedirs(output_file, exist_ok=True)
+    os.makedirs(output_file, exist_ok=True)
+    torch.save(distance_matrix, output_file + f"/sotdd_distance.pt")
 
-        torch.save(distance_matrix, output_file + f"/sourcce_{s}_target_{t}.pt")
-    
-        with open(output_file + f"/sourcce_{s}_target_{t}.txt", "w") as f:
-            f.write(f"Pairwise Distances ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n")
-            f.write(f"Source Task: {source_task}\n")
-            f.write(f"Target Tasks: {', '.join(map(str, target_tasks))}\n")
-            f.write(f"Device: {DEVICE}\n")
-            f.write(f"Time Metrics:\n")
-            f.write(f"  Data Loading: {time_metrics['data_loading']:.2f}s\n")
-            f.write(f"  Computation: {processing_time:.2f}s\n\n")
-            
-            f.write("Task Pair\tDistance\n")
-            for pair in sorted(results.keys(), key=lambda x: list(map(int, x.split('-')))):
-                f.write(f"{pair}\t{results[pair]:.4f}\n")
-        
-        time_metrics['total'] = time.time() - total_start
+    time_metrics['total'] = time.time() - total_start
 
-        print(f"Results saved to {output_file}")
-        print("\nTime Breakdown:")
-        for phase, t in time_metrics.items():
-            print(f"- {phase.capitalize()}: {t:.2f} seconds")
+    print(f"Results saved to {output_file}")
+    print("\nTime Breakdown:")
+    for phase, t in time_metrics.items():
+        print(f"- {phase.capitalize()}: {t:.2f} seconds")
         
     return results
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Compute task distances using source-target pairs')
-    parser.add_argument('--source', type=int, required=True,
-                       help='Source task number')
     parser.add_argument('--num_samples', type=int, default=1000,
                        help='Source task number')
     parser.add_argument('--num_projections', type=int, default=100000,
                        help='Source task number')
-    parser.add_argument('--target_tasks', type=int, nargs='+', default=None, 
-                       help="Target tasks for fine-tuning (0-9)")
     parser.add_argument('--output', default="dist/task_distances.txt",
                        help='Output file name')
     parser.add_argument('--parent_dir', default="saved_split_tiny_imagenet",
@@ -165,17 +128,12 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    if args.target_tasks is None:
-        args.target_tasks = [i for i in range(10) if i != args.source]
-
-    args.output = args.parent_dir + "/dist"
+    args.output = args.parent_dir + "/dist_pairwise"
 
     print(f"Starting computation on {DEVICE}...")
     results = compute_pairwise_distances(
         parent_dir=args.parent_dir,
         output_file=args.output,
-        source_task=args.source,
-        target_tasks=args.target_tasks,
         num_samples=args.num_samples,
         num_projections=args.num_projections
     )

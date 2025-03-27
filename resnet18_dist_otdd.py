@@ -131,10 +131,10 @@ def compute_pairwise_distances(parent_dir, output_file, source_task=None, target
         
         time_metrics['total'] = time.time() - total_start
 
-        print(f"Results saved to {output_file}")
-        print("\nTime Breakdown:")
-        for phase, t in time_metrics.items():
-            print(f"- {phase.capitalize()}: {t:.2f} seconds")
+    print(f"Results saved to {output_file}")
+    print("\nTime Breakdown:")
+    for phase, t in time_metrics.items():
+        print(f"- {phase.capitalize()}: {t:.2f} seconds")
         
     return results
 
