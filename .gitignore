@@ -147,3 +147,5 @@ saved*/
 
 *.pkl
 .pth
+
+spp_noti/
