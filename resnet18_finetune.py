@@ -40,7 +40,7 @@ def load_data(task_num, parent_dir, batch_size, split_ratio=0.8):
     return train_loader, test_loader
 
 
-def get_model(num_classes=200):
+def get_model(num_classes=40):
     model = models.resnet18(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model.to(DEVICE).train()
@@ -62,8 +62,11 @@ def train_and_evaluate(source_task, task_num, parent_dir, datadir, batch_size, n
                       checkpoint_freq=1, resume_from=None, pretrained_model_path=None):
     print(f"\n{'='*50}\nTraining Task {task_num}\n{'='*50}")
     
-    checkpoint_dir = os.path.join(parent_dir, "finetune_checkpoints")
+    checkpoint_dir = os.path.join(parent_dir, "finetune_checkpoints_2")
     os.makedirs(checkpoint_dir, exist_ok=True)
+
+    checkpoint_task_dir = os.path.join(checkpoint_dir, f"source_{source_task}")
+    os.makedirs(checkpoint_task_dir, exist_ok=True)
     
     train_loader, test_loader = load_data(task_num, parent_dir, batch_size)
     
@@ -79,6 +82,7 @@ def train_and_evaluate(source_task, task_num, parent_dir, datadir, batch_size, n
     
     start_epoch = 0
     best_loss = float('inf')
+    best_acc = 0
     best_model_wts = None
     train_history = []
 
@@ -118,53 +122,43 @@ def train_and_evaluate(source_task, task_num, parent_dir, datadir, batch_size, n
         epoch_loss /= len(train_loader)
         train_history.append(epoch_loss)
         
-        # Update best model
-        if epoch_loss < best_loss:
-            best_loss = epoch_loss
-            best_model_wts = model.state_dict()
-            best_scaler = scaler.state_dict()
-            best_optimizer = optimizer.state_dict()
-            best_epoch = epoch
+        accuracy_epoch_test = evaluate_model(model, test_loader)
+        
+        print(f"Task {task_num} | Epoch {epoch+1:02d}/{num_epochs} | Loss: {epoch_loss:.4f} | Accuracy: {accuracy_epoch_test:.4f}%")
 
-            print(f"New best loss: {best_loss:.4f}")
-        
-        print(f"Task {task_num} | Epoch {epoch+1:02d}/{num_epochs} | Loss: {epoch_loss:.4f}")
-        
-        # Save checkpoint
-        if checkpoint_freq > 0:
-            if (epoch + 1) % checkpoint_freq == 0:
-                checkpoint_task_dir = os.path.join(checkpoint_dir, f"source_{source_task}")
-                os.makedirs(checkpoint_task_dir, exist_ok=True)
-                save_checkpoint({
-                    'epoch': epoch + 1,
-                    'state_dict': model.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'scaler': scaler.state_dict(),
-                    'loss': epoch_loss,
-                }, os.path.join(checkpoint_task_dir, f'target_{task_num}_epoch_{epoch+1}_ckpt.pt'))
+        with open(f'{checkpoint_task_dir}/results_source_{source_task}_target_{task_num}.txt', 'a') as f:
+            f.write(f"Task {task_num} | Epoch {epoch+1:02d}/{num_epochs} | Loss: {epoch_loss:.4f} | Accuracy: {accuracy_epoch_test:.4f}%\n")
+
+        if accuracy_epoch_test > best_acc:
+            print(f"Update best model from {best_acc} to {accuracy_epoch_test}")
+            best_acc = accuracy_epoch_test
+            best_model_wts = model.state_dict().copy()
+            best_optimizer = optimizer.state_dict().copy()
+            best_scaler = scaler.state_dict().copy()
+            best_epoch_loss = epoch_loss
+            best_epoch = epoch + 1
+
 
     # Save final models
-    checkpoint_task_dir = os.path.join(checkpoint_dir, f"source_{source_task}")
-    os.makedirs(checkpoint_task_dir, exist_ok=True)
     final_model_path = os.path.join(checkpoint_task_dir, f'target_{task_num}_epoch_{epoch+1}_last.pt')
     save_checkpoint({
         'epoch': epoch + 1,
         'state_dict': model.state_dict(),
         'optimizer': optimizer.state_dict(),
         'scaler': scaler.state_dict(),
-        'loss': best_loss,
+        'loss': epoch_loss,
     }, final_model_path)
 
     
     # Save best model
     if best_model_wts is not None:
-        best_model_path = os.path.join(checkpoint_task_dir, f'target_{task_num}_epoch_{epoch+1}_best.pt')
+        best_model_path = os.path.join(checkpoint_task_dir, f'target_{task_num}_epoch_{best_epoch}_best.pt')
         save_checkpoint({
             'epoch': best_epoch,
             'state_dict': best_model_wts,
             'optimizer': best_optimizer,
             'scaler': best_scaler,
-            'loss': best_loss,
+            'loss': best_epoch_loss,
         }, best_model_path)
     
     # Evaluate both models

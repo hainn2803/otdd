@@ -8,6 +8,7 @@ from scipy import stats
 import json
 from matplotlib.ticker import FormatStrFormatter
 
+
 method = "sotdd"
 num_moments = 5
 if method == "sotdd":

@@ -84,7 +84,7 @@ def compute_pairwise_distances(parent_dir, output_file, num_samples=1000, num_pr
     kwargs = {
         "dimension": 224,
         "num_channels": 3,
-        "num_moments": 6,
+        "num_moments": 5,
         "use_conv": True,
         "precision": "float",
         "p": 2,
@@ -100,7 +100,7 @@ def compute_pairwise_distances(parent_dir, output_file, num_samples=1000, num_pr
         **kwargs
     )
 
-    time_metrics['computation'] = processing_time
+    time_metrics['computation'] = processing_time # 600 secs
 
     os.makedirs(output_file, exist_ok=True)
     torch.save(distance_matrix, output_file + f"/sotdd_distance.pt")

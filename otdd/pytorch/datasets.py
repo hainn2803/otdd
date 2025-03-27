@@ -458,7 +458,6 @@ def load_torchvision_data(dataname, valid_size=0.0, splits=None, shuffle=True,
         if maxsize_for_each_class is not None:
             new_train_idx = list()
             set_classes = torch.unique(train.targets)
-            print(f"Hello {set_classes}")
             for i in range(len(set_classes)):
                 cls_id = set_classes[i]
                 X_cls = train_idx[train.targets[train_idx] == cls_id][:maxsize_for_each_class].tolist()
@@ -597,6 +596,7 @@ def load_imagenet(datadir=None, resize=None, tiny=False, augmentations=False, ma
             valid_transform_list
         ),
     )
+    print(valid_data.targets)
     fold_loaders, dsets = load_torchvision_data('Imagenet', transform=[],
                                                 data=(train_data, valid_data),
                                                 maxsize=maxsize,

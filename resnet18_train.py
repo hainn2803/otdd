@@ -11,22 +11,32 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {DEVICE}")
 
 def load_data(task_num, parent_dir, batch_size):
-    data_path = f'{parent_dir}/data_task_{task_num}_size_10000.pt'
-    labels_path = f'{parent_dir}/labels_task_{task_num}_size_10000.pt'
+    train_path = f'{parent_dir}/trainset_{task_num}.pt'
+    test_path = f'{parent_dir}/test{task_num}.pt'
     
-    task_data = torch.load(data_path)
-    task_labels = torch.load(labels_path)
+    train_data, train_labels = torch.load(train_path)
+    test_data, test_labels = torch.load(test_path)
     
-    dataset = TensorDataset(task_data, task_labels)
-    return DataLoader(
-        dataset, 
+    dataset_train = TensorDataset(train_data, train_labels)
+    dataset_test = TensorDataset(train_data, train_labels)
+
+    dataloader_train = DataLoader(
+        dataset_train, 
         batch_size=batch_size, 
         shuffle=True,
         pin_memory=True,
-        num_workers=2
+        num_workers=0
     )
+    dataloader_test = DataLoader(
+        dataset_test,
+        batch_size=batch_size, 
+        shuffle=False,
+        pin_memory=True,
+        num_workers=0
+    )
+    return dataloader_train, dataloader_test
 
-def get_model(num_classes=200):
+def get_model(num_classes=40):
     model = models.resnet18(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model.to(DEVICE).train()
@@ -34,6 +44,7 @@ def get_model(num_classes=200):
 def save_checkpoint(state, filename):
     torch.save(state, filename)
     print(f"Saved checkpoint to {filename}")
+
 
 def train_and_evaluate(task_num, parent_dir, datadir, batch_size, num_epochs, learning_rate, 
                       checkpoint_freq=1, resume_from=None):
@@ -44,9 +55,7 @@ def train_and_evaluate(task_num, parent_dir, datadir, batch_size, num_epochs, le
     os.makedirs(checkpoint_dir, exist_ok=True)
     
     # Load data
-    train_loader = load_data(task_num, parent_dir, batch_size)
-    imagenet = load_imagenet(datadir=datadir)
-    test_loader = imagenet[0]["test"]
+    train_loader, test_loader = load_data(task_num, parent_dir, batch_size)
     
     # Model setup
     model = get_model()
@@ -184,7 +193,7 @@ def evaluate_model(model, test_loader):
 
 def main():
     parser = argparse.ArgumentParser(description='ImageNet Training with Dual Model Saving')
-    parser.add_argument('--tasks', type=int, nargs='+', default=[0])
+    parser.add_argument('--tasks', type=int, nargs='+', default=[0, 1, 2, 3, 4])
     parser.add_argument('--batch_size', type=int, default=1024)
     parser.add_argument('--num_epochs', type=int, default=50)
     parser.add_argument('--learning_rate', type=float, default=0.001)
