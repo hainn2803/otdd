@@ -1,7 +1,7 @@
 #!/bin/bash -e
 #SBATCH --job-name=rebuttal0
-#SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet0.out
-#SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet0.err
+#SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/dist.out
+#SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/dist.err
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks-per-node=1
