@@ -84,7 +84,7 @@ def compute_pairwise_distances(parent_dir, output_file, num_samples=1000, num_pr
         "use_conv": True,
         "precision": "float",
         "p": 2,
-        "chunk": 10000
+        "chunk": 1000
     }
 
     # Compute distance
