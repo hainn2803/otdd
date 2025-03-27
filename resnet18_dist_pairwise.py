@@ -29,17 +29,14 @@ def get_task_numbers(parent_dir):
         raise RuntimeError(f"Error scanning directory: {str(e)}")
 
 
-
 def load_task_data(task_num, parent_dir, sample_size=400, seed=42):
     """Load task data with balanced class sampling"""
 
     np.random.seed(seed)
-    data_path = f'{parent_dir}/data_task_{task_num}_size_10000.pt'
-    labels_path = f'{parent_dir}/labels_task_{task_num}_size_10000.pt'
+    data_path = f'{parent_dir}/data/trainset_{task_num}.pt'
 
     # Load full dataset
-    task_data = torch.load(data_path)
-    task_labels = torch.load(labels_path)
+    task_data, task_labels = torch.load(data_path)
     
     labels_np = task_labels.numpy()
     unique_labels, counts = np.unique(labels_np, return_counts=True)
@@ -64,7 +61,6 @@ def load_task_data(task_num, parent_dir, sample_size=400, seed=42):
         task_labels[selected_indices]
     )
         
-
 
 def compute_pairwise_distances(parent_dir, output_file, num_samples=1000, num_projections=10000):
     """Compute distances between source task and multiple target tasks"""
@@ -117,13 +113,11 @@ def compute_pairwise_distances(parent_dir, output_file, num_samples=1000, num_pr
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Compute task distances using source-target pairs')
-    parser.add_argument('--num_samples', type=int, default=1000,
+    parser.add_argument('--num_samples', type=int, default=5000,
                        help='Source task number')
-    parser.add_argument('--num_projections', type=int, default=100000,
+    parser.add_argument('--num_projections', type=int, default=500000,
                        help='Source task number')
-    parser.add_argument('--output', default="dist/task_distances.txt",
-                       help='Output file name')
-    parser.add_argument('--parent_dir', default="saved_split_tiny_imagenet",
+    parser.add_argument('--parent_dir', default="saved_split_task",
                        help='Parent directory with task data')
     
     args = parser.parse_args()

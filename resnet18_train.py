@@ -36,10 +36,12 @@ def load_data(task_num, parent_dir, batch_size):
     )
     return dataloader_train, dataloader_test
 
+
 def get_model(num_classes=40):
     model = models.resnet18(pretrained=False)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model.to(DEVICE).train()
+
 
 def save_checkpoint(state, filename):
     torch.save(state, filename)
@@ -66,8 +68,10 @@ def train_and_evaluate(task_num, parent_dir, batch_size, num_epochs, learning_ra
     # Training state variables
     start_epoch = 0
     best_loss = float('inf')
+    best_accuracy = 0
     best_model_wts = None
     train_history = []
+    best_model_path = None
 
     # Resume training if specified
     if resume_from and os.path.isfile(resume_from):
@@ -105,80 +109,66 @@ def train_and_evaluate(task_num, parent_dir, batch_size, num_epochs, learning_ra
         epoch_loss /= len(train_loader)
         train_history.append(epoch_loss)
         
-        # Update best model
-        if epoch_loss < best_loss:
-            best_loss = epoch_loss
-            best_model_wts = model.state_dict().copy()
-            best_scaler = scaler.state_dict()
-            best_optimizer = optimizer.state_dict()
-            best_epoch = epoch
-
-            print(f"New best loss: {best_loss:.4f}")
-        
         print(f"Task {task_num} | Epoch {epoch+1:02d}/{num_epochs} | Loss: {epoch_loss:.4f}")
         
         # Save checkpoint
         if checkpoint_freq > 0:
             if (epoch + 1) % checkpoint_freq == 0:
-                checkpoint_task_dir = os.path.join(checkpoint_dir, f"task_{task_num}")
-                os.makedirs(checkpoint_task_dir, exist_ok=True)
-                save_checkpoint({
-                    'epoch': epoch + 1,
-                    'state_dict': model.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'scaler': scaler.state_dict(),
-                    'loss': epoch_loss,
-                }, os.path.join(checkpoint_task_dir, f'task_{task_num}_epoch_{epoch+1}_ckpt.pt'))
+                print("Evaluating...")
+                accuracy = evaluate_model(model, test_loader)
+                print(f"Task {task_num} | Epoch {epoch+1:02d}/{num_epochs} | Loss: {epoch_loss:.4f} | Accuracy: {accuracy:.4f}")
+
+                if accuracy > best_accuracy:
+                    best_accuracy = accuracy
+                    best_loss = epoch_loss
+                    checkpoint_task_dir = os.path.join(checkpoint_dir, f"task_{task_num}")
+                    best_model_path = os.path.join(checkpoint_task_dir, f'task_{task_num}_best.pt')
+                    os.makedirs(checkpoint_task_dir, exist_ok=True)
+                    save_checkpoint({
+                        'epoch': epoch + 1,
+                        'state_dict': model.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'scaler': scaler.state_dict(),
+                        'loss': epoch_loss,
+                    }, best_model_path)
 
     # Save final models
     checkpoint_task_dir = os.path.join(checkpoint_dir, f"task_{task_num}")
     os.makedirs(checkpoint_task_dir, exist_ok=True)
-    final_model_path = os.path.join(checkpoint_task_dir, f'task_{task_num}_epoch_{epoch+1}_last.pt')
+    final_model_path = os.path.join(checkpoint_task_dir, f'task_{task_num}_last.pt')
     save_checkpoint({
         'epoch': epoch + 1,
         'state_dict': model.state_dict(),
         'optimizer': optimizer.state_dict(),
         'scaler': scaler.state_dict(),
-        'loss': best_loss,
+        'loss': train_history[-1],
     }, final_model_path)
-
-    
-    # Save best model
-    if best_model_wts is not None:
-        best_model_path = os.path.join(checkpoint_task_dir, f'task_{task_num}_epoch_{epoch+1}_best.pt')
-        save_checkpoint({
-            'epoch': best_epoch,
-            'state_dict': best_model_wts,
-            'optimizer': best_optimizer,
-            'scaler': best_scaler,
-            'loss': best_loss,
-        }, best_model_path)
     
     # Evaluate both models
     print("\nEvaluating models...")
     # Load final model
+
+    print(f"\nTask {task_num} Evaluation Results:")
     final_model = get_model()
     final_model.load_state_dict(torch.load(final_model_path)["state_dict"])
     final_model = final_model.to(DEVICE).eval()
+    final_accuracy = evaluate_model(final_model, test_loader)
+    print(f"Final Model Accuracy: {final_accuracy:.2f}%")
+    with open(f'{checkpoint_task_dir}/results_task_{task_num}.txt', 'a') as f:
+        f.write(f"Final Model Accuracy: {final_accuracy:.2f}%\n")
+        f.write(f"Final Training Loss: {train_history[-1]:.4f}\n")
 
     # Load best model
-    best_model = get_model()
-    best_model.load_state_dict(torch.load(best_model_path)["state_dict"])
-    best_model = best_model.to(DEVICE).eval()
-    
-    final_accuracy = evaluate_model(final_model, test_loader)
-    best_accuracy = evaluate_model(best_model, test_loader)
-    
-    print(f"\nTask {task_num} Evaluation Results:")
-    print(f"Final Model Accuracy: {final_accuracy:.2f}%")
-    print(f"Best Loss Model Accuracy: {best_accuracy:.2f}%")
-    
-    # Save results
-    with open(f'{checkpoint_task_dir}/results_task_{task_num}.txt', 'w') as f:
-        f.write(f"Final Model Accuracy: {final_accuracy:.2f}%\n")
-        f.write(f"Best Loss Model Accuracy: {best_accuracy:.2f}%\n")
-        f.write(f"Best Training Loss: {best_loss:.4f}\n")
-        f.write(f"Final Training Loss: {train_history[-1]:.4f}\n")
+    if best_model_path is not None:
+        best_model = get_model()
+        best_model.load_state_dict(torch.load(best_model_path)["state_dict"])
+        best_model = best_model.to(DEVICE).eval()
+        best_accuracy = evaluate_model(best_model, test_loader)
+        print(f"Best Loss Model Accuracy: {best_accuracy:.2f}%")
+        with open(f'{checkpoint_task_dir}/results_task_{task_num}.txt', 'a') as f:
+            f.write(f"Best Loss Model Accuracy: {best_accuracy:.2f}%\n")
+            f.write(f"Best Training Loss: {best_loss:.4f}\n")
+
 
 def evaluate_model(model, test_loader):
     correct, total = 0, 0
@@ -198,7 +188,7 @@ def main():
     parser.add_argument('--num_epochs', type=int, default=50)
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--parent_dir', type=str, default="saved_split_task")
-    parser.add_argument('--checkpoint_freq', type=int, default=0)
+    parser.add_argument('--checkpoint_freq', type=int, default=1)
     parser.add_argument('--resume', type=str, default=None)
     
     args = parser.parse_args()
