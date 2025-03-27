@@ -70,7 +70,7 @@ def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs
                       checkpoint_freq=1, resume_from=None, pretrained_model_path=None):
     print(f"\n{'='*50}\nTraining Task {task_num}\n{'='*50}")
     
-    checkpoint_dir = os.path.join(parent_dir, "finetune")
+    checkpoint_dir = os.path.join(parent_dir, "finetune2")
     os.makedirs(checkpoint_dir, exist_ok=True)
 
     checkpoint_task_dir = os.path.join(checkpoint_dir, f"source_{source_task}")
@@ -98,17 +98,16 @@ def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs
     best_model_path = None
 
     # Resume training if specified
-    if resume_from and os.path.isfile(resume_from):
+    if resume_from:
         print(f"Resuming from checkpoint: {resume_from}")
+        resume_from = f"{resume_from}/source_{source_task}/task_{task_num}_last.pt"
         checkpoint = torch.load(resume_from)
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         scaler.load_state_dict(checkpoint['scaler'])
         start_epoch = checkpoint['epoch']
-        best_loss = checkpoint['best_loss']
-        best_model_wts = checkpoint['best_model_wts']
-        train_history = checkpoint['train_history']
-        print(f"Resumed training from epoch {start_epoch} with best loss {best_loss:.4f}")
+        loss = checkpoint['loss']
+        print(f"Resumed training from epoch {start_epoch} with loss {loss:.4f}")
 
     # Training loop
     for epoch in range(start_epoch, num_epochs):
@@ -156,31 +155,31 @@ def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs
                         'optimizer': optimizer.state_dict(),
                         'scaler': scaler.state_dict(),
                         'loss': epoch_loss,
+                        'accuracy': accuracy
                     }, best_model_path)
 
+    # Evaluate both models
+    print("\nEvaluating models...")
+    
     # Save final models
     final_model_path = os.path.join(checkpoint_task_dir, f'task_{task_num}_last.pt')
+
+    model = model.to(DEVICE).eval()
+    final_accuracy = evaluate_model(model, test_loader)
+
+    print(f"Final Model Accuracy: {final_accuracy:.2f}%")
+    with open(f'{checkpoint_task_dir}/results_task_{task_num}.txt', 'a') as f:
+        f.write(f"Final Model Accuracy: {final_accuracy:.2f}%\n")
+        f.write(f"Final Training Loss: {train_history[-1]:.4f}\n")
+
     save_checkpoint({
         'epoch': epoch + 1,
         'state_dict': model.state_dict(),
         'optimizer': optimizer.state_dict(),
         'scaler': scaler.state_dict(),
         'loss': train_history[-1],
+        'accuracy': final_accuracy
     }, final_model_path)
-    
-    # Evaluate both models
-    print("\nEvaluating models...")
-    # Load final model
-
-    print(f"\nTask {task_num} Evaluation Results:")
-    final_model = get_model()
-    final_model.load_state_dict(torch.load(final_model_path)["state_dict"])
-    final_model = final_model.to(DEVICE).eval()
-    final_accuracy = evaluate_model(final_model, test_loader)
-    print(f"Final Model Accuracy: {final_accuracy:.2f}%")
-    with open(f'{checkpoint_task_dir}/results_task_{task_num}.txt', 'a') as f:
-        f.write(f"Final Model Accuracy: {final_accuracy:.2f}%\n")
-        f.write(f"Final Training Loss: {train_history[-1]:.4f}\n")
 
     # Load best model
     if best_model_path is not None:
@@ -216,7 +215,7 @@ def main():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--parent_dir', type=str, default="saved_split_task")
     parser.add_argument('--checkpoint_freq', type=int, default=1)
-    parser.add_argument('--resume', type=str, default=None)
+    parser.add_argument('--resume', type=str, default="saved_split_task/finetune")
     
     args = parser.parse_args()
 
@@ -224,7 +223,7 @@ def main():
         source_task_checkpoint = os.path.join(args.parent_dir, "checkpoints", f"task_{source_id}/task_{source_id}_best.pt")
 
         if args.target_tasks is None:
-            target_tasks = [i for i in range(10) if i != source_id]
+            target_tasks = [i for i in range(5) if i != source_id]
 
         for target_task in target_tasks:
             print(f"Pretraining on {source_id}, Fine-tuning on target task {target_task}...")

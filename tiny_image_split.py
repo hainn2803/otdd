@@ -188,8 +188,8 @@ def main():
     # DEVICE = "cpu"
     print(f"Use CUDA or not: {DEVICE}")
 
-    # datadir_tiny_imagenet = "data/tiny-ImageNet/tiny-imagenet-200"
-    datadir_tiny_imagenet = "data/imagenet"
+    datadir_tiny_imagenet = "data/tiny-imagenet-200"
+    # datadir_tiny_imagenet = "data/imagenet"
     imagenet = load_imagenet(datadir=datadir_tiny_imagenet)
 
     imagenet_trainset = imagenet[1]["train"]
@@ -198,8 +198,8 @@ def main():
     imagenet_trainloader = imagenet[0]["train"]
     imagenet_testloader = imagenet[0]["test"]
 
-    num_tasks        = 20
-    labels_per_task  = 1000 // num_tasks
+    num_tasks        = 10
+    labels_per_task  = 200 // num_tasks
     batch_size       = 16
     
     train_loaders, test_loaders = random_split_into_tasks(
@@ -212,8 +212,8 @@ def main():
     )
 
     for task_id in range(num_tasks):
-        save_dataset(dataloader=train_loaders[task_id], filepath=f"saved_split_task_imagenet/data/trainset_{task_id}.pt")
-        save_dataset(dataloader=test_loaders[task_id], filepath=f"saved_split_task_imagenet/data/test_{task_id}.pt")
+        save_dataset(dataloader=train_loaders[task_id], filepath=f"saved_split_task_10/data/trainset_{task_id}.pt")
+        save_dataset(dataloader=test_loaders[task_id], filepath=f"saved_split_task_10/data/test_{task_id}.pt")
 
 if __name__ == "__main__":
     main()

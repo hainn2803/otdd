@@ -183,11 +183,11 @@ def evaluate_model(model, test_loader):
 
 def main():
     parser = argparse.ArgumentParser(description='ImageNet Training with Dual Model Saving')
-    parser.add_argument('--tasks', type=int, nargs='+', default=[0, 1, 2, 3, 4])
+    parser.add_argument('--tasks', type=int, nargs='+', default=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     parser.add_argument('--batch_size', type=int, default=1024)
     parser.add_argument('--num_epochs', type=int, default=50)
     parser.add_argument('--learning_rate', type=float, default=0.001)
-    parser.add_argument('--parent_dir', type=str, default="saved_split_task")
+    parser.add_argument('--parent_dir', type=str, default="saved_split_task_10")
     parser.add_argument('--checkpoint_freq', type=int, default=1)
     parser.add_argument('--resume', type=str, default=None)
     
