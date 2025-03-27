@@ -3,9 +3,10 @@
 #SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet0.out
 #SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet0.err
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=1
-#SBATCH --mem-per-gpu=125G
-#SBATCH --cpus-per-gpu=32
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem-per-gpu=50GB
 #SBATCH --partition=research
 #SBATCH --mail-type=all
 #SBATCH --mail-user=v.HaiNN14@vinai.io
