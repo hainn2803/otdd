@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash -lex
+# SLURM SUBMIT SCRIPT
 #SBATCH --job-name=rebuttal0
 #SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/dist.out
 #SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/dist.err
@@ -9,14 +10,19 @@
 #SBATCH --mem-per-gpu=50GB
 #SBATCH --partition=research
 #SBATCH --mail-type=all
-#SBATCH --mail-user=v.HaiNN14@vinai.io
+#SBATCH --mail-user=v.hainn14@vinai.io
 
+# (optional) debugging flags
+# export NCCL_DEBUG=INFO
+# export PYTHONFAULTHANDLER=1
+# export NCCL_SOCKET_IFNAME=bond0
+
+   
 module purge
 module load python/miniconda3/miniconda3
-
-# Corrected line
 eval "$(conda shell.bash hook)"
 
+conda deactivate
 conda activate /lustre/scratch/client/movian/research/users/hainn14/envs/otdd
 cd /lustre/scratch/client/movian/research/users/hainn14/otdd
 
