@@ -46,7 +46,7 @@ def save_checkpoint(state, filename):
     print(f"Saved checkpoint to {filename}")
 
 
-def train_and_evaluate(task_num, parent_dir, datadir, batch_size, num_epochs, learning_rate, 
+def train_and_evaluate(task_num, parent_dir, batch_size, num_epochs, learning_rate, 
                       checkpoint_freq=1, resume_from=None):
     print(f"\n{'='*50}\nTraining Task {task_num}\n{'='*50}")
     
@@ -198,7 +198,6 @@ def main():
     parser.add_argument('--num_epochs', type=int, default=50)
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--parent_dir', type=str, default="saved_split_tiny_imagenet")
-    parser.add_argument('--datadir', type=str, default="data/tiny-ImageNet/tiny-imagenet-200")
     parser.add_argument('--checkpoint_freq', type=int, default=0)
     parser.add_argument('--resume', type=str, default=None)
     
@@ -208,7 +207,6 @@ def main():
         train_and_evaluate(
             task_num=task_num,
             parent_dir=args.parent_dir,
-            datadir=args.datadir,
             batch_size=args.batch_size,
             num_epochs=args.num_epochs,
             learning_rate=args.learning_rate,
