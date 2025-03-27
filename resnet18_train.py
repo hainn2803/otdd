@@ -12,7 +12,7 @@ print(f"Using device: {DEVICE}")
 
 def load_data(task_num, parent_dir, batch_size):
     train_path = f'{parent_dir}/data/trainset_{task_num}.pt'
-    test_path = f'{parent_dir}/data/test{task_num}.pt'
+    test_path = f'{parent_dir}/data/test_{task_num}.pt'
     
     train_data, train_labels = torch.load(train_path)
     test_data, test_labels = torch.load(test_path)
