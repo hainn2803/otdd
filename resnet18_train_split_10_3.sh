@@ -1,7 +1,7 @@
 #!/bin/bash -e
-#SBATCH --job-name=rebuttal1
-#SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet1.out
-#SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet1.err
+#SBATCH --job-name=rebuttal3
+#SBATCH --output=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet3.out
+#SBATCH --error=/lustre/scratch/client/movian/research/users/hainn14/otdd/spp_noti/resnet3.err
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=1
 #SBATCH --mem-per-gpu=125G
