@@ -22,8 +22,8 @@ import torchvision.datasets as dset
 from transformers import BertTokenizer
 import sentence_transformers as st
 
-import torchtext
-from torchtext.data.utils import get_tokenizer
+# import torchtext
+# from torchtext.data.utils import get_tokenizer
 
 import h5py
 
