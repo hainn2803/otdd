@@ -108,7 +108,7 @@ def train_and_evaluate(task_num, parent_dir, batch_size, num_epochs, learning_ra
         # Update best model
         if epoch_loss < best_loss:
             best_loss = epoch_loss
-            best_model_wts = model.state_dict()
+            best_model_wts = model.state_dict().copy()
             best_scaler = scaler.state_dict()
             best_optimizer = optimizer.state_dict()
             best_epoch = epoch
@@ -166,8 +166,8 @@ def train_and_evaluate(task_num, parent_dir, batch_size, num_epochs, learning_ra
     best_model.load_state_dict(torch.load(best_model_path)["state_dict"])
     best_model = best_model.to(DEVICE).eval()
     
-    final_accuracy = evaluate_model(final_model, train_loader)
-    best_accuracy = evaluate_model(best_model, train_loader)
+    final_accuracy = evaluate_model(final_model, test_loader)
+    best_accuracy = evaluate_model(best_model, test_loader)
     
     print(f"\nTask {task_num} Evaluation Results:")
     print(f"Final Model Accuracy: {final_accuracy:.2f}%")

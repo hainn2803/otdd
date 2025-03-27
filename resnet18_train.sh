@@ -19,4 +19,4 @@ eval "$(conda shell.bash hook)"
 conda activate /lustre/scratch/client/movian/research/users/hainn14/envs/otdd
 cd /lustre/scratch/client/movian/research/users/hainn14/otdd
 
-python3 resnet18_train.py --num_epochs 100 --datadir 
+python3 resnet18_train.py --num_epochs 100
