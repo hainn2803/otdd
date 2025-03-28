@@ -67,31 +67,28 @@ def save_checkpoint(state, filename):
     print(f"Saved checkpoint to {filename}")
 
 
-def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs, learning_rate, 
-                      checkpoint_freq=1, resume_from=None, pretrained_model_path=None, load_pretrain=1):
+def train_and_evaluate(task_num, parent_dir, batch_size, num_epochs, learning_rate, checkpoint_freq=1):
     print(f"\n{'='*50}\nTraining Task {task_num}\n{'='*50}")
     
-    if load_pretrain == 1:
-        checkpoint_dir = os.path.join(parent_dir, "finetune")
-        os.makedirs(checkpoint_dir, exist_ok=True)
-    else:
-        checkpoint_dir = os.path.join(parent_dir, "baseline")
-        os.makedirs(checkpoint_dir, exist_ok=True)
+    checkpoint_dir = os.path.join(parent_dir, "baseline")
+    os.makedirs(checkpoint_dir, exist_ok=True)
 
-    checkpoint_task_dir = os.path.join(checkpoint_dir, f"source_{source_task}")
+    checkpoint_task_dir = os.path.join(checkpoint_dir, f"task_{task_num}")
     os.makedirs(checkpoint_task_dir, exist_ok=True)
     
     train_loader, test_loader = load_data(task_num, parent_dir, batch_size)
     
     model = get_model()
     
-    if pretrained_model_path:
-        model = load_pretrained_model(model, pretrained_model_path, load_pretrain)
-        print(f"Fine-tuning on Task {task_num} with pretrained weights.")
+    for param in model.parameters():
+        param.requires_grad = False
+
+    for param in model.fc.parameters():
+        param.requires_grad = True
     
-    # Model setup
+
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.fc.parameters(), lr=learning_rate)
     scaler = torch.cuda.amp.GradScaler()
     
     # Training state variables
@@ -101,18 +98,6 @@ def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs
     best_model_wts = None
     train_history = []
     best_model_path = None
-
-    # Resume training if specified
-    if resume_from:
-        print(f"Resuming from checkpoint: {resume_from}")
-        resume_from = f"{resume_from}/source_{source_task}/task_{task_num}_last.pt"
-        checkpoint = torch.load(resume_from)
-        model.load_state_dict(checkpoint['state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        scaler.load_state_dict(checkpoint['scaler'])
-        start_epoch = checkpoint['epoch']
-        loss = checkpoint['loss']
-        print(f"Resumed training from epoch {start_epoch} with loss {loss:.4f}")
 
     # Training loop
     for epoch in range(start_epoch, num_epochs):
@@ -213,38 +198,26 @@ def evaluate_model(model, test_loader):
 
 def main():
     parser = argparse.ArgumentParser(description='ImageNet Training with Dual Model Saving')
-    parser.add_argument('--source_task', type=int, nargs='+', default=[0], help="List of source tasks for pretraining (0-9)")
-    parser.add_argument('--target_tasks', type=int, nargs='+', default=None, help="Target tasks for fine-tuning (0-9)")
+    parser.add_argument('--task_num', type=int, nargs='+', default=[0], help="List of source tasks for pretraining (0-9)")
     parser.add_argument('--batch_size', type=int, default=1024)
     parser.add_argument('--num_epochs', type=int, default=50)
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--parent_dir', type=str, default="saved_split_task")
     parser.add_argument('--checkpoint_freq', type=int, default=1)
-    parser.add_argument('--resume', type=str, default=None)
-    parser.add_argument('--load_pretrain', type=int, default=1)
     
     args = parser.parse_args()
 
-    for source_id in args.source_task:
-        source_task_checkpoint = os.path.join(args.parent_dir, "checkpoints", f"task_{source_id}/task_{source_id}_best.pt")
+    for task_id in args.task_num:
 
-        if args.target_tasks is None:
-            target_tasks = [i for i in range(10) if i != source_id]
-
-        for target_task in target_tasks:
-            print(f"Pretraining on {source_id}, Fine-tuning on target task {target_task}...")
-            train_and_evaluate(
-                source_task = source_id,
-                task_num=target_task,
-                parent_dir=args.parent_dir,
-                batch_size=args.batch_size,
-                num_epochs=args.num_epochs,
-                learning_rate=args.learning_rate,
-                checkpoint_freq=args.checkpoint_freq,
-                resume_from=args.resume,
-                pretrained_model_path=source_task_checkpoint,
-                load_pretrain=args.load_pretrain
-            )
+        print(f"Training baseline on task {task_id}...")
+        train_and_evaluate(
+            task_num=task_id,
+            parent_dir=args.parent_dir,
+            batch_size=args.batch_size,
+            num_epochs=args.num_epochs,
+            learning_rate=args.learning_rate,
+            checkpoint_freq=args.checkpoint_freq
+        )
 
 if __name__ == "__main__":
     main()
