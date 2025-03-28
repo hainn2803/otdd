@@ -70,7 +70,7 @@ def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs
                       checkpoint_freq=1, resume_from=None, pretrained_model_path=None):
     print(f"\n{'='*50}\nTraining Task {task_num}\n{'='*50}")
     
-    checkpoint_dir = os.path.join(parent_dir, "finetune2")
+    checkpoint_dir = os.path.join(parent_dir, "finetune")
     os.makedirs(checkpoint_dir, exist_ok=True)
 
     checkpoint_task_dir = os.path.join(checkpoint_dir, f"source_{source_task}")
