@@ -53,7 +53,7 @@ def train_and_evaluate(task_num, parent_dir, batch_size, num_epochs, learning_ra
     print(f"\n{'='*50}\nTraining Task {task_num}\n{'='*50}")
     
     # Initialize paths and directories
-    checkpoint_dir = os.path.join(parent_dir, "checkpoints")
+    checkpoint_dir = os.path.join(parent_dir, "checkpoints_345")
     os.makedirs(checkpoint_dir, exist_ok=True)
     
     # Load data
