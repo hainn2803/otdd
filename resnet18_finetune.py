@@ -91,7 +91,7 @@ def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs
     
     # Model setup
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.fc.parameters(), lr=learning_rate)
     scaler = torch.cuda.amp.GradScaler()
     
     # Training state variables
@@ -216,8 +216,8 @@ def main():
     parser.add_argument('--source_task', type=int, nargs='+', default=[0], help="List of source tasks for pretraining (0-9)")
     parser.add_argument('--target_tasks', type=int, nargs='+', default=None, help="Target tasks for fine-tuning (0-9)")
     parser.add_argument('--batch_size', type=int, default=1024)
-    parser.add_argument('--num_epochs', type=int, default=50)
-    parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--num_epochs', type=int, default=20)
+    parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--parent_dir', type=str, default="saved_split_task")
     parser.add_argument('--checkpoint_freq', type=int, default=1)
     parser.add_argument('--resume', type=str, default=None)
