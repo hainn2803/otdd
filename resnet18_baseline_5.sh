@@ -19,4 +19,4 @@ eval "$(conda shell.bash hook)"
 conda activate /lustre/scratch/client/movian/research/users/hainn14/envs/otdd
 cd /lustre/scratch/client/movian/research/users/hainn14/otdd
 
-python3 resnet18_baseline.py --num_epochs 20 --parent_dir saved_split_task_10 --learning_rate 0.01 --source_task 5
+python3 resnet18_baseline.py --num_epochs 20 --parent_dir saved_split_task_10 --learning_rate 0.01 --task_num 5
