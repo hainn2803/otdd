@@ -43,14 +43,15 @@ def get_model(num_classes=40):
     return model.to(DEVICE).train()
 
 
-def load_pretrained_model(model, checkpoint_path):
+def load_pretrained_model(model, checkpoint_path, load_pretrain=1):
     """
     Loads pretrained model weights from checkpoint, 
     then freezes all layers except the last (fully-connected) layer.
     """
-    checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint['state_dict'])
-    print(f"Loaded pretrained model from {checkpoint_path}")
+    if load_pretrain == 1:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint['state_dict'])
+        print(f"Loaded pretrained model from {checkpoint_path}")
 
     for param in model.parameters():
         param.requires_grad = False
@@ -67,11 +68,15 @@ def save_checkpoint(state, filename):
 
 
 def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs, learning_rate, 
-                      checkpoint_freq=1, resume_from=None, pretrained_model_path=None):
+                      checkpoint_freq=1, resume_from=None, pretrained_model_path=None, load_pretrain=1):
     print(f"\n{'='*50}\nTraining Task {task_num}\n{'='*50}")
     
-    checkpoint_dir = os.path.join(parent_dir, "finetune")
-    os.makedirs(checkpoint_dir, exist_ok=True)
+    if load_pretrain == 1:
+        checkpoint_dir = os.path.join(parent_dir, "finetune")
+        os.makedirs(checkpoint_dir, exist_ok=True)
+    else:
+        checkpoint_dir = os.path.join(parent_dir, "baseline")
+        os.makedirs(checkpoint_dir, exist_ok=True)
 
     checkpoint_task_dir = os.path.join(checkpoint_dir, f"source_{source_task}")
     os.makedirs(checkpoint_task_dir, exist_ok=True)
@@ -81,7 +86,7 @@ def train_and_evaluate(source_task, task_num, parent_dir, batch_size, num_epochs
     model = get_model()
     
     if pretrained_model_path:
-        model = load_pretrained_model(model, pretrained_model_path)
+        model = load_pretrained_model(model, pretrained_model_path, load_pretrain)
         print(f"Fine-tuning on Task {task_num} with pretrained weights.")
     
     # Model setup
@@ -216,6 +221,7 @@ def main():
     parser.add_argument('--parent_dir', type=str, default="saved_split_task_10")
     parser.add_argument('--checkpoint_freq', type=int, default=1)
     parser.add_argument('--resume', type=str, default=None)
+    parser.add_argument('--load_pretrain', type=int, default=1)
     
     args = parser.parse_args()
 
@@ -236,7 +242,8 @@ def main():
                 learning_rate=args.learning_rate,
                 checkpoint_freq=args.checkpoint_freq,
                 resume_from=args.resume,
-                pretrained_model_path=source_task_checkpoint
+                pretrained_model_path=source_task_checkpoint,
+                load_pretrain=args.load_pretrain
             )
 
 if __name__ == "__main__":
