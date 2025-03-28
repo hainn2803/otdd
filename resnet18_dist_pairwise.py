@@ -117,7 +117,7 @@ if __name__ == "__main__":
                        help='Source task number')
     parser.add_argument('--num_projections', type=int, default=500000,
                        help='Source task number')
-    parser.add_argument('--parent_dir', default="saved_split_task",
+    parser.add_argument('--parent_dir', default="saved_split_task_10",
                        help='Parent directory with task data')
     
     args = parser.parse_args()

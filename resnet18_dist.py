@@ -89,11 +89,11 @@ def compute_pairwise_distances(parent_dir, output_file, source_task=None, target
     kwargs = {
         "dimension": 224,
         "num_channels": 3,
-        "num_moments": 6,
+        "num_moments": 5,
         "use_conv": True,
         "precision": "float",
         "p": 2,
-        "chunk": 10000
+        "chunk": 1000
     }
 
     results = {}
