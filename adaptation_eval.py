@@ -10,7 +10,7 @@ from matplotlib.ticker import FormatStrFormatter
 
 
 method = "sotdd"
-num_moments = 5
+num_moments = 6
 if method == "sotdd":
     display_method = f"s-OTDD ({num_moments} moments - 10,000 projections)"
 elif method == "otdd_exact":
@@ -29,7 +29,7 @@ if method == "sotdd":
     # dist_path = f"saved_nist/dist/sotdd_linear_gaussian_dist_mean.json"
     # dist_path = f"saved_nist/dist/sotdd_dist_21_01_2025.json"
     # dist_path = "saved_nist/dist/sotdd_dist_26_01_2025.json"
-    # dist_path = f"saved_nist/dist/sotdd_distance_num_moments_{num_moments}.json"
+    dist_path = f"saved_nist/dist/sotdd_distance_num_moments_{num_moments}.json"
 elif method == "otdd_exact":
     dist_path = f"saved_nist/dist/otdd_dist_exact.json"
 elif method == "otdd_gaussian":
@@ -129,10 +129,11 @@ df = pd.DataFrame(perf_data)
 
 # Calculate Pearson correlation
 pearson_corr, p_value = stats.pearsonr(df["OT Dataset Distance"], df["Relative Drop in Test Error (%)"])
+spearmanr_corr, p_value = stats.spearmanr(df["OT Dataset Distance"], df["Relative Drop in Test Error (%)"])
 
-print(pearson_corr, p_value)
+print(spearmanr_corr, pearson_corr)
 
-label=f"$\\rho$: {pearson_corr:.2f}\np-value: {p_value:.2f}"
+label=f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
 
 # Plotting
 plt.figure(figsize=(8, 8))
@@ -188,5 +189,10 @@ plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
 # Display plot
 plt.grid(False)
-plt.savefig(f'{saved_dir}/{method}_distance_num_moments_{num_moments}.png')
-plt.savefig(f'{saved_dir}/{method}_distance_num_moments_{num_moments}.pdf')
+
+if method == "sotdd":
+    plt.savefig(f'{saved_dir}/rebuttal_{method}_distance_num_moments_{num_moments}.png')
+    plt.savefig(f'{saved_dir}/rebuttal_{method}_distance_num_moments_{num_moments}.pdf')
+else:
+    plt.savefig(f'{saved_dir}/rebuttal_{method}.png')
+    plt.savefig(f'{saved_dir}/rebuttal_{method}.pdf')

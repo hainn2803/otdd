@@ -69,7 +69,7 @@ def compute_pairwise_distances(parent_dir, output_file, num_samples=1000, num_pr
     
     # Phase 1: Data Preparation and Validation
     phase_start = time.time()
-    unique_tasks = [0, 1, 2, 3, 4]
+    unique_tasks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     list_task_datasets = list()
     for task in unique_tasks:
         task_dataset = load_task_data(task_num=task, parent_dir=parent_dir, sample_size=num_samples)

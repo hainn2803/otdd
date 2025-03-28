@@ -26,12 +26,12 @@ method = "sotdd"
 maxsize = 100000
 displayed_method = "s-OTDD (100,000 projections)"
 
-method = "otdd_exact"
-maxsize = 5000
-displayed_method = "OTDD (Exact)"
+# method = "otdd_exact"
+# maxsize = 5000
+# displayed_method = "OTDD (Exact)"
 
 file_path = f"{parent_path}/acc_dist_method_{method}_maxsize_{maxsize}_4.txt"
-file_path = f"{parent_path}/acc_dist_method_{method}_maxsize_{maxsize}_3.txt"
+# file_path = f"{parent_path}/acc_dist_method_{method}_maxsize_{maxsize}_3.txt"
 
 
 list_acc = list()
@@ -60,12 +60,13 @@ def calculate_correlation(list_dist_1, list_dist_2):
     x_min, x_max = min(list_dist_1), max(list_dist_1)
     x_extended = np.linspace(x_min, x_max, 100).reshape(-1, 1)
     y_extended_pred = model.predict(x_extended)
-    rho, p_value = stats.pearsonr(list_dist_1, list_dist_2)
-    print(rho, p_value)
+    pearson_corr, p_value = stats.pearsonr(list_dist_1, list_dist_2)
+    spearmanr_corr, p_value = stats.spearmanr(list_dist_1, list_dist_2)
     a, b = scientific_number(p_value)
     plt.figure(figsize=(8, 8))
     sns.set(style="whitegrid")
-    label = f"$\\rho$: {rho:.2f}\np-value: {a:.2f}$\\times 10^{{{b}}}$"
+    # label = f"$\\rho$: {rho:.2f}\np-value: {a:.2f}$\\times 10^{{{b}}}$"
+    label = f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
     sns.regplot(
         x=list_dist_1,
         y=list_dist_2,

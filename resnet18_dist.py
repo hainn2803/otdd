@@ -125,7 +125,7 @@ def compute_pairwise_distances(parent_dir, output_file, source_task=None, target
 
         torch.save(distance_matrix, output_file + f"/sourcce_{s}_target_{t}.pt")
     
-        with open(output_file + f"/sourcce_{s}_target_{t}.txt", "w") as f:
+        with open(output_file + f"/source_{s}_target_{t}.txt", "w") as f:
             f.write(f"Pairwise Distances ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n")
             f.write(f"Source Task: {source_task}\n")
             f.write(f"Target Tasks: {', '.join(map(str, target_tasks))}\n")
