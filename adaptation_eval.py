@@ -10,7 +10,7 @@ from matplotlib.ticker import FormatStrFormatter
 
 
 method = "sotdd"
-num_moments = 6
+num_moments = 1
 if method == "sotdd":
     display_method = f"s-OTDD ({num_moments} moments - 10,000 projections)"
 elif method == "otdd_exact":
@@ -128,12 +128,12 @@ for target_name, sources in perf_dict.items():
 df = pd.DataFrame(perf_data)
 
 # Calculate Pearson correlation
-pearson_corr, p_value = stats.pearsonr(df["OT Dataset Distance"], df["Relative Drop in Test Error (%)"])
-spearmanr_corr, p_value = stats.spearmanr(df["OT Dataset Distance"], df["Relative Drop in Test Error (%)"])
+pearson_corr, p_value_pearson = stats.pearsonr(df["OT Dataset Distance"], df["Relative Drop in Test Error (%)"])
+spearmanr_corr, p_value_spearman = stats.spearmanr(df["OT Dataset Distance"], df["Relative Drop in Test Error (%)"])
 
 print(spearmanr_corr, pearson_corr)
 
-label=f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
+label=f"$\\rho$: {spearmanr_corr:.2f}  p: {p_value_pearson:.2f}\n r: {pearson_corr:.2f}  p: {p_value_spearman:.2f}"
 
 # Plotting
 plt.figure(figsize=(8, 8))
@@ -147,7 +147,7 @@ sns.regplot(
     scatter=True, 
     ci=95, 
     color="c", 
-    scatter_kws={"s": 10, "color": "tab:blue"},  # Set dot color to blue
+    scatter_kws={"s": 20, "color": "tab:blue"},  # Set dot color to blue
     label=label
 )
 

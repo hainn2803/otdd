@@ -123,6 +123,14 @@ for i in range(len(DATASET_NAME)):
 
     # Calculate Pearson correlation
     rho, p_value = stats.pearsonr(dist_list, perf_list)
+
+    pearson_corr, p_value = stats.pearsonr(dist_list, perf_list)
+    spearmanr_corr, p_value = stats.spearmanr(dist_list, perf_list)
+
+    print(spearmanr_corr, pearson_corr)
+
+    label=f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
+
     print(f"{DATASET_NAME[i]}: rho={rho}, p-value={p_value}")
 
     if rho < 0:

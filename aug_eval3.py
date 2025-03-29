@@ -1,5 +1,4 @@
 import csv
-
 import os
 import numpy as np
 import pandas as pd
@@ -11,6 +10,7 @@ import json
 import torch
 import math
 from matplotlib.ticker import FormatStrFormatter
+
 
 
 def scientific_number(x):
@@ -60,13 +60,13 @@ def calculate_correlation(list_dist_1, list_dist_2):
     x_min, x_max = min(list_dist_1), max(list_dist_1)
     x_extended = np.linspace(x_min, x_max, 100).reshape(-1, 1)
     y_extended_pred = model.predict(x_extended)
-    pearson_corr, p_value = stats.pearsonr(list_dist_1, list_dist_2)
-    spearmanr_corr, p_value = stats.spearmanr(list_dist_1, list_dist_2)
-    a, b = scientific_number(p_value)
+    pearson_corr, p_value_pearson = stats.pearsonr(list_dist_1, list_dist_2)
+    spearmanr_corr, p_value_spearman = stats.spearmanr(list_dist_1, list_dist_2)
+    a_pearson, b_pearson = scientific_number(p_value_pearson)
+    a_spearman, b_spearman = scientific_number(p_value_spearman)
     plt.figure(figsize=(8, 8))
     sns.set(style="whitegrid")
-    # label = f"$\\rho$: {rho:.2f}\np-value: {a:.2f}$\\times 10^{{{b}}}$"
-    label = f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
+    label=f"$\\rho$: {spearmanr_corr:.2f}  p: {a_spearman:.2f}$\\times 10^{{{b_spearman}}}\n r: {pearson_corr:.2f}  p: {a_pearson:.2f}$\\times 10^{{{b_pearson}}}"
     sns.regplot(
         x=list_dist_1,
         y=list_dist_2,

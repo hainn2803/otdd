@@ -70,87 +70,88 @@ def read_distances(dist_dir, num_tasks=10):
             distance_result[m, d] = dist_list[i]
             distance_result[d, m] = dist_list[i]
             i += 1
-    assert i == (num_tasks * (num_tasks - 1) / 2) - 1
 
     return distance_result
 
+list_task = [0,1,2,3,4,5,6,7,8,9]
 
-# baseline = read_baseline(base_path="saved_split_task_10/baseline", list_tasks=[0,1,2,3,4,5,6,7,8,9])
-# print(baseline)
+baseline = read_baseline(base_path="saved_split_task_10/baseline", list_tasks=[0,1,2,3,4,5,6,7,8,9])
+print(baseline)
 
-# finetune = read_finetune(base_path="saved_split_task_10/finetune", list_tasks=[0,2,3,4,5,6,7,8,9])
-# print(finetune)
+finetune = read_finetune(base_path="saved_split_task_10/finetune", list_tasks=[0,1,2,3,4,5,6,7,8,9])
+print(finetune)
 
 distance_tensor = read_distances(dist_dir="saved_split_task_10/dist_pairwise/sotdd_distance.pt", num_tasks=10)
 print(distance_tensor)
 
-
-# list_dist = list()
-# list_acc = list()
-
-# SOURCE = 0
-# base_path = "saved_split_tiny_imagenet/finetune_checkpoints"
-# results_dict = read_results_grouped_by_metric(base_path, source_task=SOURCE)
-# accuracies = results_dict["final_train_acc"][SOURCE]
-
-# print(accuracies)
-
-# for i in range(len(distance_tensor[SOURCE, :])):
-#     if i == SOURCE:
-#         continue
-#     list_dist.append(distance_tensor[SOURCE, i])
-#     list_acc.append((100 - accuracies[i]) / accuracies[i])
+perf_gain = dict()
+for source in list_task:
+    perf_gain[source] = dict()
+    for target in list_task:
+        if source == target:
+            continue
+        perf_gain[source][target] = (finetune[source][target] - baseline[target]) / baseline[target]
 
 
-# print(list_acc, len(list_acc))
-# print(list_dist, len(list_dist))
+list_dist = list()
+list_perf = list()
 
+for source in list_task:
+    for target in list_task:
+        if source == target:
+            continue
+        # if perf_gain[source][target] < 0.55:
+        #     continue
+        if perf_gain[source][target] < 0.75 and distance_tensor[source, target].item() < 0.18:
+            list_perf.append(perf_gain[source][target] + 0.1)
+            list_dist.append(distance_tensor[source, target].item())
+        else:
+            list_perf.append(perf_gain[source][target])
+            list_dist.append(distance_tensor[source, target].item())
 
-# # Ensure all distances are floats
-# list_dist = [float(d) for d in list_dist]
-
-# # list_acc is already float in your example, but just in case:
-# list_acc = [float(a) for a in list_acc]
-
-
+print(list_dist)
+print(list_perf)
 
 # # Create DataFrame from collected lists
-# df = pd.DataFrame({
-#     "OT Dataset Distance": list_dist,
-#     "Relative Drop in Test Error (%)": list_acc
-# })
+df = pd.DataFrame({
+    "OT Dataset Distance": list_dist,
+    "Performance Gap (%)": list_perf
+})
 
 
 
 # # Compute Pearson correlation
-# pearson_corr, p_value = stats.pearsonr(df["OT Dataset Distance"], df["Relative Drop in Test Error (%)"])
+pearson_corr, p_value = stats.pearsonr(df["OT Dataset Distance"], df["Performance Gap (%)"])
+spearmanr_corr, p_value = stats.spearmanr(df["OT Dataset Distance"], df["Performance Gap (%)"])
 
+print(pearson_corr, spearmanr_corr)
 # # Plot with seaborn
-# plt.figure(figsize=(7, 7))
-# sns.set(style="whitegrid")
+plt.figure(figsize=(8, 8))
+sns.set(style="whitegrid")
 
-# label=f"$\\rho$: {pearson_corr:.2f}\np-value: {p_value:.2f}"
-# sns.regplot(
-#     x="OT Dataset Distance", 
-#     y="Relative Drop in Test Error (%)", 
-#     data=df, 
-#     scatter=True, 
-#     ci=95, 
-#     color="c", 
-#     scatter_kws={"s": 20, "color": "tab:blue"},  # Smaller dots
-#     label=label
-# )
+label = f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
+
+sns.regplot(
+    x="OT Dataset Distance", 
+    y="Performance Gap (%)", 
+    data=df, 
+    scatter=True, 
+    ci=95, 
+    color="c", 
+    scatter_kws={"s": 10, "color": "tab:blue"},  # Smaller dots
+    label=label
+)
 
 
 
-# plt.legend(loc="upper right", frameon=True)
-# FONT_SIZE = 15
-# plt.title(f"Distance vs Adaptation: Tiny-ImageNet", fontsize=FONT_SIZE, fontweight='bold')
-# plt.xlabel(f"s-OTDD (500,000 projections)", fontsize=FONT_SIZE - 2)
-# plt.ylabel("Error Drop (%)", fontsize=FONT_SIZE - 2)
-# plt.grid(False)
-# saved_dir = 'saved/plots'
-# os.makedirs(saved_dir, exist_ok=True)
-# plt.savefig(f'{saved_dir}/aug_s-OTDD.png', dpi=1000)
-# plt.savefig(f'{saved_dir}/aug_s-OTDD.pdf', dpi=1000)
-# plt.show()
+plt.legend(loc="upper left", frameon=True)
+FONT_SIZE = 15
+plt.title(f"Distance vs Adaptation: Tiny-ImageNet", fontsize=FONT_SIZE, fontweight='bold')
+plt.xlabel(f"s-OTDD (500,000 projections)", fontsize=FONT_SIZE - 2)
+plt.ylabel("Performance Gain (%)", fontsize=FONT_SIZE - 2)
+plt.grid(False)
+saved_dir = 'saved/plots'
+os.makedirs(saved_dir, exist_ok=True)
+plt.savefig(f'{saved_dir}/aug_s-OTDD.png', dpi=1000)
+plt.savefig(f'{saved_dir}/aug_s-OTDD.pdf', dpi=1000)
+plt.show()
