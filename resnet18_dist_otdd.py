@@ -105,7 +105,7 @@ def compute_pairwise_distances(parent_dir, output_file, source_task=None, target
         )
 
         start_time = time.time()
-        distance = dist_calc.distance(maxsamples=num_samples).item()
+        distance = dist_calc.distance(maxsamples=num_samples)
         end_time = time.time()
 
         processing_time = end_time - start_time
