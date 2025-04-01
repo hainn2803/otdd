@@ -10,6 +10,16 @@
 #SBATCH --mail-type=all
 #SBATCH --mail-user=v.HaiNN14@vinai.io
 
+
+module purge
+module load python/miniconda3/miniconda3
+
+# Corrected line
+eval "$(conda shell.bash hook)"
+
+conda activate /lustre/scratch/client/movian/research/users/hainn14/envs/otdd
+cd /lustre/scratch/client/movian/research/users/hainn14/otdd
+
 for source in {0..9}; do
   for target in $(seq $((source + 1)) 9); do
     echo "Running source=$source, target=$target"
