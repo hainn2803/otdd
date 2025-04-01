@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from torch.utils.data import DataLoader, TensorDataset
 from otdd.pytorch.method5 import compute_pairwise_distance
+import gc
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
