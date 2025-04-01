@@ -23,7 +23,7 @@ cd /lustre/scratch/client/movian/research/users/hainn14/otdd
 for source in {0..9}; do
   for target in $(seq $((source + 1)) 9); do
     echo "Running source=$source, target=$target"
-    python3 resnet18_dist.py --source $source --target_tasks $target --num_samples 5000 --num_projections 500000 --parent_dir saved_split_task_10
+    python3 resnet18_dist.py --source $source --target_tasks $target --num_samples 5000 --num_projections 100000 --parent_dir saved_split_task_10
   done
 done
 
