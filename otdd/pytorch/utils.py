@@ -649,7 +649,7 @@ def generate_unit_convolution_projections(image_size=32, num_channels=3, num_pro
     
     elif image_size == 28:
 
-        choice = 1
+        choice = 2
 
         if choice == 1:
             list_kernel_size = [5, 5, 5, 5, 3, 3, 3, 3, 3, 2]

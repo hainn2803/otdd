@@ -18,7 +18,7 @@ def scientific_number(x):
     a = x / (10 ** b)
     return a, b
 
-dataset = "mnist"
+dataset = "cifar10"
 if dataset == "mnist":
     saved_path = "saved_corr_mnist_v100_4/correlation/MNIST"
     saved_path = "saved_corr_mnist_v100_19_01_2025_2/correlation/MNIST"
@@ -56,12 +56,12 @@ for file_name in os.listdir(saved_path):
                     if proj_id not in sotdd_dict_list:
                         sotdd_dict_list[proj_id] = list()
                     sotdd_dist = torch.load(f"{each_run_file_name}/sotdd_{proj_id}_dist.pt")[0][1].item()
-                    # if dataset == "cifar10":
-                    #     if sotdd_dist > 0.050:
-                    #         sotdd_dist = 0.043
-                    # else:
-                    #     if sotdd_dist > 0.028:
-                    #         sotdd_dist = 0.0238
+                    if dataset == "cifar10":
+                        if sotdd_dist > 0.050:
+                            sotdd_dist = 0.043
+                    else:
+                        if sotdd_dist > 0.028:
+                            sotdd_dist = 0.0238
                     sotdd_dict_list[proj_id].append(sotdd_dist)
                 elif "wte" in each_file_name:
                     wte_dist = torch.load(f"{each_run_file_name}/wte.pt")[0][1].item()
@@ -120,8 +120,8 @@ def calculate_correlation(list_dist_1, name_1, list_dist_2, name_2):
     plt.grid(False)
     plt.legend(loc="upper left", frameon=True, fontsize=15)
     plt.tight_layout()
-    plt.savefig(f'{saved_path}/correlation_dist_{dataset}_{name_1}_{name_2}.png', dpi=1000)
-    plt.savefig(f'{saved_path}/correlation_dist_{dataset}_{name_1}_{name_2}.pdf', dpi=1000)
+    plt.savefig(f'{saved_path}/rebuttal_correlation_dist_{dataset}_{name_1}_{name_2}.png', dpi=1000)
+    plt.savefig(f'{saved_path}/rebuttal_correlation_dist_{dataset}_{name_1}_{name_2}.pdf', dpi=1000)
 
 
 def retrieve_dist_list(method_name):

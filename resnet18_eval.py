@@ -121,15 +121,15 @@ df = pd.DataFrame({
 
 
 # # Compute Pearson correlation
-pearson_corr, p_value = stats.pearsonr(df["OT Dataset Distance"], df["Performance Gap (%)"])
-spearmanr_corr, p_value = stats.spearmanr(df["OT Dataset Distance"], df["Performance Gap (%)"])
+pearson_corr, p_value_pearson = stats.pearsonr(df["OT Dataset Distance"], df["Performance Gap (%)"])
+spearmanr_corr, p_value_spearman = stats.spearmanr(df["OT Dataset Distance"], df["Performance Gap (%)"])
 
 print(pearson_corr, spearmanr_corr)
 # # Plot with seaborn
 plt.figure(figsize=(8, 8))
 sns.set(style="whitegrid")
 
-label = f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
+label=f"$\\rho$: {spearmanr_corr:.2f}  p: {p_value_spearman:.2f}\nr: {pearson_corr:.2f}  p: {p_value_pearson:.2f}"
 
 sns.regplot(
     x="OT Dataset Distance", 

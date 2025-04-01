@@ -308,7 +308,7 @@ def compute_sotdd_distance(maxsamples=MAXSIZE_DIST, num_projection=10000, METADA
         list_dataset.append(METADATA_DATASET[dt_name]["train_loader"])
     
     kwargs = {
-        "dimension": 28 * 28,
+        "dimension": 28*28,
         "num_channels": 1,
         "num_moments": 5,
         "use_conv": False,
@@ -474,11 +474,14 @@ if __name__ == "__main__":
     #     json.dump(DIST_otdd, json_file, indent=4)
 
 
-    DIST_sotdd = compute_sotdd_distance(num_projection=20000)
-    dist_file_path = f'{parent_dir}/sotdd_dist_26_01_2025.json'
-    with open(dist_file_path, 'w') as json_file:
-        json.dump(DIST_sotdd, json_file, indent=4)
+    for num_proj in [10000]:
+        DIST_sotdd = compute_sotdd_distance(num_projection=num_proj)
+        dist_file_path = f'{parent_dir}/sotdd_dist_30_03_2025_noclamp_proj{num_proj}_linear_5moment.json'
+        with open(dist_file_path, 'w') as json_file:
+            json.dump(DIST_sotdd, json_file, indent=4)
 
+    # [10, 50, 80, 100, 200, 500]
+    # [1000, 5000, 10000, 20000, 50000]
 
     # DIST_sotdd = compute_wte_distance()
     # dist_file_path = f'{parent_dir}/wte_distance.json'

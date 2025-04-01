@@ -446,12 +446,21 @@ def Wasserstein_One_Dimension(X, Y, a=None, b=None, p=2, device="cpu"):
         # torch.quantile(input=X_sorted, q=qs, dim=0, keepdim=False, interpolation='linear')
         X_quantiles = quantile_function(qs, a_cum_weights, X_sorted)
         Y_quantiles = quantile_function(qs, b_cum_weights, Y_sorted)
+
+        del a_cum_weights, b_cum_weights
+        gc.collect()
+        torch.cuda.empty_cache()
+
         diff_quantiles = torch.abs(X_quantiles - Y_quantiles)
 
         zeros = torch.zeros((1, qs.shape[1])).to(device)
         qs = torch.cat((zeros, qs), dim=0)
-
         delta = qs[1:, ...] - qs[:-1, ...]
+
+        del qs
+        gc.collect()
+        torch.cuda.empty_cache()
+
         if p == 1:
             return torch.sum(delta * diff_quantiles, dim=0)
         return torch.pow(input=torch.sum(delta * torch.pow(diff_quantiles, p), dim=0), exponent=1/p)

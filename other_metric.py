@@ -1,18 +1,30 @@
 import os
 import torch
 from torch.utils.data import DataLoader
-from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 from torchvision import datasets, transforms
 from collections import defaultdict
 import torch.nn as nn
+from trainer import FeatureExtractor, FullyConnectedNetwork
+
+import torch
+import torch.optim as optim
+import torch.nn as nn
+from otdd.pytorch.datasets import load_torchvision_data
+import otdd.pytorch.method5 as method5
+import otdd.pytorch.method_linear_gaussian as method_linear_gaussian
+from otdd.pytorch.distance import DatasetDistance
+
+from otdd.pytorch.method_gaussian import load_full_dataset
+from otdd.pytorch.moments import compute_label_stats
+
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 
-root_path = "saved_nist/nist1/finetune_weights"
+def create_dataset(maxsamples=None, maxsize_for_each_class=None):
 
-
-def create_dataset(maxsamples=MAXSIZE_DIST, maxsize_for_each_class=None):
-
+    LIST_DATASETS = ["MNIST", "FashionMNIST", "EMNIST", "KMNIST", "USPS"]
     METADATA_DATASET = dict()
     for dataset_name in LIST_DATASETS:
 
@@ -24,9 +36,9 @@ def create_dataset(maxsamples=MAXSIZE_DIST, maxsize_for_each_class=None):
             data_folders = load_torchvision_data(dataset_name, valid_size=0, resize=28, download=False, maxsize=maxsamples, maxsize_for_each_class=maxsize_for_each_class)
 
         METADATA_DATASET[dataset_name]["train_loader"] = data_folders[0]['train']
+        METADATA_DATASET[dataset_name]["test_loader"] = data_folders[0]['test']
         METADATA_DATASET[dataset_name]["train_set"] = data_folders[1]['train']
-        METADATA_DATASET[dataset_name]["pretrained_extractor_path"] = f'{pretrained_path}/{dataset_name}/extractor_layers.pth'
-        METADATA_DATASET[dataset_name]["pretrained_classifier_path"] = f'{pretrained_path}/{dataset_name}/fc_layers.pth'
+        METADATA_DATASET[dataset_name]["test_set"] = data_folders[1]['test']
 
         if dataset_name == "MNIST":
             METADATA_DATASET[dataset_name]["num_classes"] = 10
@@ -45,55 +57,63 @@ def create_dataset(maxsamples=MAXSIZE_DIST, maxsize_for_each_class=None):
 
 
 
-for source_dataset in os.listdir(root_path):
-    source_path = os.path.join(root_path, source_dataset)
-    if not os.path.isdir(source_path):
-        continue
+METADATA_DATASET = create_dataset(maxsamples=None)
 
-    for target_dataset in os.listdir(source_path):
-        model_path = os.path.join(source_path, target_dataset)
+
+for cac in range(1, 5):
+
+    root_path = f"saved_nist/nist{cac}/pretrained_weights"
+
+    for target_dataset in os.listdir(root_path):
+        print(target_dataset)
+        target_path = os.path.join(root_path, target_dataset)
+
+        if not os.path.isdir(target_path):
+            continue
+
+        model_path = target_path
+        # for source_dataset in os.listdir(target_path):
+        #     model_path = os.path.join(target_path, source_dataset)
         extractor_path = os.path.join(model_path, "extractor_layers.pth")
         fc_path = os.path.join(model_path, "fc_layers.pth")
 
         if not os.path.exists(extractor_path) or not os.path.exists(fc_path):
             continue
 
-        print(f"Evaluating: {source_dataset} → {target_dataset}")
+        # print(f"Evaluating: {source_dataset} → {target_dataset}")
 
-        # Load model
-        extractor = torch.load(extractor_path).eval()
-        classifier = torch.load(fc_path).eval()
+        ft_extractor = FeatureExtractor(input_size=28).to(DEVICE)
+        ft_extractor.load_state_dict(torch.load(extractor_path))
 
-        # Load test set for the target domain
-        try:
-            testset = load_test_dataset(target_dataset, transform)
-        except ValueError as e:
-            print(e)
-            continue
+        classifier = FullyConnectedNetwork(feat_dim=ft_extractor.feat_dim, num_classes=METADATA_DATASET[target_dataset]["num_classes"]).to(DEVICE)
+        classifier.load_state_dict(torch.load(fc_path))
 
-        testloader = DataLoader(testset, batch_size=64, shuffle=False)
+        ft_extractor = ft_extractor.eval()
+        classifier = classifier.eval()
 
-        all_preds, all_labels = [], []
+        testloader = METADATA_DATASET[target_dataset]["test_loader"]
+
+        all_preds = []
+        all_labels = []
 
         with torch.no_grad():
             for images, labels in testloader:
-                outputs = model(images)
+
+                feats = ft_extractor(images.to(DEVICE))
+                feats = feats.view(feats.shape[0], -1)
+                outputs = classifier(feats)
                 preds = outputs.argmax(dim=1)
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(labels.cpu().numpy())
 
         # Compute metrics
-        precision = precision_score(all_labels, all_preds, average="macro", zero_division=0)
-        recall = recall_score(all_labels, all_preds, average="macro", zero_division=0)
-        f1 = f1_score(all_labels, all_preds, average="macro", zero_division=0)
+        precision = precision_score(all_labels, all_preds, average="macro")
+        recall = recall_score(all_labels, all_preds, average="macro")
+        f1 = f1_score(all_labels, all_preds, average="macro")
+        accuracy = accuracy_score(all_labels, all_preds)
 
-        results[f"{source_dataset}→{target_dataset}"] = {
-            "precision": precision,
-            "recall": recall,
-            "f1": f1
-        }
-
-# Print results
-print("\n--- Evaluation Results ---")
-for k, v in results.items():
-    print(f"{k:25s} | Precision: {v['precision']:.3f}, Recall: {v['recall']:.3f}, F1: {v['f1']:.3f}")
+        with open(model_path+"/accuracy.txt", "a") as f:
+            f.write(f"accuracy: {accuracy} \n")
+            f.write(f"precision: {precision} \n")
+            f.write(f"recall: {recall} \n")
+            f.write(f"f1: {f1} \n")

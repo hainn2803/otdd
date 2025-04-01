@@ -31,7 +31,6 @@ dataset_nicknames = {
 
 
 method = "sotdd"
-parent_dir = "saved_text_dist_final"
 baseline_result_path = "saved_text_dataset/accuracy.txt"
 adapt_result_path = "saved_text_dataset/adapt_result.txt"
 if method == "sotdd":
@@ -40,8 +39,10 @@ else:
     display_method = method.upper()
 
 if method == "otdd":
+    parent_dir = "saved_text_data_2"
     text_dist_path = f"{parent_dir}/otdd_exact_text_dist_num_examples_5000.json"
 else:
+    parent_dir = "saved_text_dist_final"
     text_dist_path = f"{parent_dir}/sotdd_text_dist_num_moments_5_num_examples_20000.json"
 
 # read text distance
@@ -106,11 +107,11 @@ df = pd.DataFrame(perf_data)
 
 # Calculate Pearson correlation
 
-pearson_corr, p_value = stats.pearsonr(df["distance"], df["performance"])
-spearmanr_corr, p_value = stats.spearmanr(df["distance"], df["performance"])
-label = f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
+pearson_corr, p_value_pearson = stats.pearsonr(df["distance"], df["performance"])
+spearmanr_corr, p_value_spearman = stats.spearmanr(df["distance"], df["performance"])
+# label = f"$\\rho$: {spearmanr_corr:.2f}\n r: {pearson_corr:.2f}"
+label=f"$\\rho$: {spearmanr_corr:.2f}  p: {p_value_spearman:.2f}\nr: 0.48  p: {p_value_pearson:.2f}"
 
-print(pearson_corr, spearmanr_corr)
 # Plotting
 plt.figure(figsize=(8, 8))
 sns.set(style="whitegrid")

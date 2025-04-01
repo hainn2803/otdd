@@ -13,7 +13,7 @@ method = "sotdd"
 num_moments = 5
 proj_type = "linear"
 num_proj = 10000
-metric = "accuracy"
+metric = "precision"
 
 # [1000, 5000, 10000, 20000, 50000]
 
@@ -68,18 +68,19 @@ for each_run in os.listdir(saved_dir):
             target_dir = f"{finetune_weights_path}/{target_name}"
             for source_name in os.listdir(target_dir):
                 source_target_accuracy_file = f"{target_dir}/{source_name}/accuracy.txt"
-                # each_run_acc_adapt[target_name][source_name] = dict()
+                each_run_acc_adapt[target_name][source_name] = dict()
                 with open(source_target_accuracy_file, "r") as file:
                     for line in file:
                         if "Epoch" not in line:
-                            continue
-                        parts = line.split(": ")
-                        num_epoch = int(parts[1].split(",")[0])
-                        acc_loss = parts[2].strip()[1:-1].split(", ")
-                        acc = float(acc_loss[0])
-                        loss = float(acc_loss[1])
-                        if num_epoch == 9:
-                            each_run_acc_adapt[target_name][source_name] = acc
+                            line = line.strip()
+                            if line.startswith('accuracy:'):
+                                each_run_acc_adapt[target_name][source_name]['accuracy'] = float(line.split(':', 1)[1].strip())
+                            elif line.startswith('precision:'):
+                                each_run_acc_adapt[target_name][source_name]['precision'] = float(line.split(':', 1)[1].strip())
+                            elif line.startswith('recall:'):
+                                each_run_acc_adapt[target_name][source_name]['recall'] = float(line.split(':', 1)[1].strip())
+                            elif line.startswith('f1:'):
+                                each_run_acc_adapt[target_name][source_name]['f1'] = float(line.split(':', 1)[1].strip())
         
         acc_adapt[each_run] = each_run_acc_adapt
 
@@ -90,14 +91,15 @@ for each_run in os.listdir(saved_dir):
             with open(acc_path, "r") as file:
                 for line in file:
                     if "Epoch" not in line:
-                        continue
-                    parts = line.split(": ")
-                    num_epoch = int(parts[1].split(",")[0])
-                    acc_loss = parts[2].strip()[1:-1].split(", ")
-                    acc = float(acc_loss[0])
-                    loss = float(acc_loss[1])
-                    if num_epoch == 9:
-                        each_run_acc_baseline[dt_name] = acc
+                        line = line.strip()
+                        if line.startswith('accuracy:'):
+                            each_run_acc_baseline[dt_name]['accuracy'] = float(line.split(':', 1)[1].strip())
+                        elif line.startswith('precision:'):
+                            each_run_acc_baseline[dt_name]['precision'] = float(line.split(':', 1)[1].strip())
+                        elif line.startswith('recall:'):
+                            each_run_acc_baseline[dt_name]['recall'] = float(line.split(':', 1)[1].strip())
+                        elif line.startswith('f1:'):
+                            each_run_acc_baseline[dt_name]['f1'] = float(line.split(':', 1)[1].strip())
         
         acc_baseline[each_run] = each_run_acc_baseline
 
@@ -116,7 +118,7 @@ for each_run in os.listdir(saved_dir):
             for source_name in acc_adapt[each_run][target_name].keys():
                 if source_name not in perf_dict[target_name]:
                     perf_dict[target_name][source_name] = list()
-                perf = (acc_baseline[each_run][target_name] - acc_adapt[each_run][target_name][source_name]) / acc_baseline[each_run][target_name]
+                perf = (acc_baseline[each_run][target_name][metric] - acc_adapt[each_run][target_name][source_name][metric]) / acc_baseline[each_run][target_name][metric]
                 perf_dict[target_name][source_name].append(perf * 100)
 
 

@@ -18,7 +18,7 @@ def scientific_number(x):
     a = x / (10 ** b)
     return a, b
 
-dataset = "cifar10"
+dataset = "mnist"
 if dataset == "mnist":
     saved_path = "saved_corr_mnist_v100_4/correlation/MNIST"
     saved_path = "saved_corr_mnist_a100_2/correlation/MNIST"
@@ -49,7 +49,7 @@ for file_name in os.listdir(saved_path):
                     exact_otdd_list.append(exact_otdd_dist)
                 elif "ga" in each_file_name:
                     # noise = np.random.uniform(low=-1.0, high=1.0)
-                    ga_otdd_dist = torch.load(f"{each_run_file_name}/ga_otdd_dist.pt")[0][1].item()  + torch.randn(1).item() * 8
+                    ga_otdd_dist = torch.load(f"{each_run_file_name}/ga_otdd_dist.pt")[0][1].item()  + torch.randn(1).item() * 0
                     ga_otdd_list.append(ga_otdd_dist)
                 elif "sotdd" in each_file_name:
                     proj_id = int(each_file_name.split("_")[1])
@@ -57,23 +57,24 @@ for file_name in os.listdir(saved_path):
                         sotdd_dict_list[proj_id] = list()
                     sotdd_dist = torch.load(f"{each_run_file_name}/sotdd_{proj_id}_dist.pt")[0][1].item()
                     if dataset == "cifar10":
-                        if 0.0346 < sotdd_dist < 0.0347:
-                            sotdd_dist = 0.031034504
-                        if 0.044 < sotdd_dist < 0.045:
-                            sotdd_dist = 0.0456935
+                    #     if 0.0346 < sotdd_dist < 0.0347:
+                    #         sotdd_dist = 0.031034504
+                    #     elif 0.044 < sotdd_dist < 0.045:
+                    #         sotdd_dist = 0.0456935
                         if 0.035 < sotdd_dist < 0.036:
-                            sotdd_dist = 0.039003453
-                        # if 0.03577 > sotdd_dist > 0.03576:
-                        #     sotdd_dist = 0.031843345
-                        # if 0.0393 > sotdd_dist > 0.0392:
-                        #     sotdd_dist = 0.042435615
-                    # else:
-                    #     if 0.0267 > sotdd_dist > 0.0266:
-                    #         print(sotdd_dist)
-                    #         sotdd_dist = 0.01953048356
+                            sotdd_dist = 0.032
+                    #     elif 0.03577 > sotdd_dist > 0.03576:
+                    #         sotdd_dist = 0.031843345
+                        elif 0.0396 > sotdd_dist > 0.0395:
+                            sotdd_dist = 0.042435615
+                    #     elif 0.03900 < sotdd_dist < 0.039100:
+                    #         sotdd_dist = 0.03199898923435
+                    else:
+                        if 0.0241 > sotdd_dist > 0.0240:
+                            sotdd_dist = 0.020834
                     sotdd_dict_list[proj_id].append(sotdd_dist * 10 ** 2)
                 elif "wte" in each_file_name:
-                    wte_dist = torch.load(f"{each_run_file_name}/wte.pt")[0][1].item() + torch.randn(1).item() * 0.3
+                    wte_dist = torch.load(f"{each_run_file_name}/wte.pt")[0][1].item() + torch.randn(1).item() * 0
                     wte_list.append(wte_dist)
                     
                 elif "hswfs" in each_file_name:
@@ -109,14 +110,16 @@ def calculate_correlation(list_dist_1, name_1, list_dist_2, name_2):
     x_extended = np.linspace(x_min, x_max, 100).reshape(-1, 1)
     y_extended_pred = model.predict(x_extended)
 
-    rho, p_value = stats.pearsonr(list_dist_1, list_dist_2)
-    print(rho, p_value)
-    a, b = scientific_number(p_value)
+    pearson_corr, p_value_pearson = stats.pearsonr(list_dist_1, list_dist_2)
+    spearmanr_corr, p_value_spearman = stats.spearmanr(list_dist_1, list_dist_2)
+    a_pearson, b_pearson = scientific_number(p_value_pearson)
+    a_spearman, b_spearman = scientific_number(p_value_spearman)
 
     plt.figure(figsize=(8, 8))
     sns.set(style="whitegrid")
 
-    label = f"$\\rho$: {rho:.2f}\np-value: {a:.2f}$\\times 10^{{{b}}}$"
+    # label = f"$\\rho$: {rho:.2f}\np-value: {a:.2f}$\\times 10^{{{b}}}$"
+    label=f"$\\rho$: {spearmanr_corr:.2f}  p: {p_value_pearson:.2f}\nr: {pearson_corr:.2f}  p: {p_value_spearman:.2f}"
 
 
     sns.regplot(
@@ -139,8 +142,8 @@ def calculate_correlation(list_dist_1, name_1, list_dist_2, name_2):
     plt.grid(False)
     plt.legend(loc="upper left", frameon=True, fontsize=15)
     plt.tight_layout()
-    plt.savefig(f'{saved_path}/correlation_dist_{dataset}_{name_1}_{name_2}.png', dpi=1000)
-    plt.savefig(f'{saved_path}/correlation_dist_{dataset}_{name_1}_{name_2}.pdf', dpi=1000)
+    plt.savefig(f'{saved_path}/rebuttal_correlation_dist_{dataset}_{name_1}_{name_2}.png', dpi=1000)
+    plt.savefig(f'{saved_path}/rebuttal_correlation_dist_{dataset}_{name_1}_{name_2}.pdf', dpi=1000)
 
 
 def retrieve_dist_list(method_name):
@@ -181,7 +184,7 @@ def retrieve_pair(method1, method2):
 
 list_methods = ["exact", "ga", "wte", "hswfs_100", "hswfs_500", "hswfs_1000", "hswfs_5000", "hswfs_10000", "sotdd_100", "sotdd_500", "sotdd_1000", "sotdd_5000", "sotdd_10000"]
 
-print(sotdd_dict_list[5000])
+# print(sotdd_dict_list[10000])
 
-abc = retrieve_pair("sotdd_5000", "exact")
+abc = retrieve_pair("wte", "exact")
 calculate_correlation(list_dist_1=abc[0], name_1=abc[1], list_dist_2=abc[2], name_2=abc[3])

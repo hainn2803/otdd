@@ -199,7 +199,7 @@ class Embeddings_sOTDD():
             X_projection = self._project_X(X=data, projection_matrix=projection_matrix, use_conv=use_conv) # shape == (num_examples, num_projection)
 
             # print(X_projection.min(), X_projection.max())
-            X_projection = torch.clamp(X_projection, min=-5, max=5)
+            # X_projection = torch.clamp(X_projection, min=-5, max=5)
 
             avg_moment_X_projection = self._compute_moments_projected_distrbution(X_projection=X_projection, k=k, factorial_k=factorial_k)
             # shape == (num_projection, num_moments)
@@ -316,6 +316,10 @@ def compute_pairwise_distance(list_D, device='cpu', num_projections=10000, evalu
                                                                 num_projections=chunk,
                                                                 use_conv=use_conv)
             list_chunk_embeddings.append(chunk_dataset_embeddings)
+        
+        del list_theta[ch], list_psi[ch], list_moments[ch], list_factorial_moments[ch]
+        gc.collect()
+        torch.cuda.empty_cache()
 
         list_chunk_w1d = list()
         for i in range(len(list_chunk_embeddings)):
@@ -331,10 +335,6 @@ def compute_pairwise_distance(list_D, device='cpu', num_projections=10000, evalu
         list_chunk_w1d = torch.cat(list_chunk_w1d, dim=1)
         # print(f"cac 1: {list_chunk_w1d.shape}") # 100, 1
         list_w1d.append(list_chunk_w1d)
-
-        # chunk_sw = torch.pow(torch.mean(torch.pow(input=torch.tensor(list_chunk_w1d), exponent=p), dim=0), exponent=1/p) 
-
-        # print(f"chunk_id: {ch}, sw: {chunk_sw}")
 
     list_w1d = torch.cat(list_w1d, dim=0)
     # print(f"cac 2: {list_w1d.shape}") # 10000, 1
