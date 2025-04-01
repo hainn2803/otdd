@@ -333,11 +333,10 @@ def compute_pairwise_distance(list_D, device='cpu', num_projections=10000, evalu
                 list_chunk_w1d.append(w_1d.reshape(-1, 1))
          
         list_chunk_w1d = torch.cat(list_chunk_w1d, dim=1)
-        # print(f"cac 1: {list_chunk_w1d.shape}") # 100, 1
         list_w1d.append(list_chunk_w1d)
 
     list_w1d = torch.cat(list_w1d, dim=0)
-    # print(f"cac 2: {list_w1d.shape}") # 10000, 1
+
     if p != 1:
         sw = torch.pow(input=list_w1d, exponent=p)
     else:
