@@ -34,12 +34,10 @@ def load_task_data(task_num, parent_dir, sample_size=400, seed=42):
     """Load task data with balanced class sampling"""
 
     np.random.seed(seed)
-    data_path = f'{parent_dir}/data_task_{task_num}_size_10000.pt'
-    labels_path = f'{parent_dir}/labels_task_{task_num}_size_10000.pt'
+    data_path = f'{parent_dir}/data/trainset_{task_num}.pt'
 
     # Load full dataset
-    task_data = torch.load(data_path)
-    task_labels = torch.load(labels_path)
+    task_data, task_labels = torch.load(data_path)
     
     labels_np = task_labels.numpy()
     unique_labels, counts = np.unique(labels_np, return_counts=True)
