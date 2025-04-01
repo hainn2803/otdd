@@ -3,7 +3,7 @@
 import logging
 logger = logging.getLogger(__name__)
 import math
-
+import gc
 import ot
 try:
     import ot.gpu
