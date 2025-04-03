@@ -317,9 +317,9 @@ def compute_pairwise_distance(list_D, device='cpu', num_projections=10000, evalu
                                                                 use_conv=use_conv)
             list_chunk_embeddings.append(chunk_dataset_embeddings)
         
-        del list_theta[ch], list_psi[ch], list_moments[ch], list_factorial_moments[ch]
-        gc.collect()
-        torch.cuda.empty_cache()
+        # del list_theta[ch], list_psi[ch], list_moments[ch], list_factorial_moments[ch]
+        # gc.collect()
+        # torch.cuda.empty_cache()
 
         list_chunk_w1d = list()
         for i in range(len(list_chunk_embeddings)):
