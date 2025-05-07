@@ -1,4 +1,10 @@
-# Lightspeed Geometric Dataset Distances via Projections [ICML 2025]
+# Lightspeed Geometric Dataset Distances via Projections (ICML 2025)
+
+We are thrilled to announce that our paper has been accepted for presentation at **ICML 2025**.  
+The work introduces a projection‑based optimal‑transport metric that computes dataset distances in near‑linear time, offering a practical signal for transfer learning and domain adaptation.
+
+- **Full paper:** [Lightspeed Geometric Dataset Distances via Projections](https://arxiv.org/abs/2501.18901)
+- **Reference code:** Can be found in this repo: `otdd/pytorch/sotdd.py`
 
 ## Environment Installation
 
@@ -50,6 +56,7 @@ data/
 ├── yelp_review_full_csv/
 └── yelp_review_polarity_csv/ 
 ```
+
 ## Experiment Scripts
 
 ### Correlation Experiment
