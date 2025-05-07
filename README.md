@@ -29,6 +29,27 @@ pip install .
 ```
 
 
+### Datasets:
+We follow the experiments in [Geometric Dataset Distances via Optimal Transport](https://github.com/microsoft/otdd). Please follow the instruction in the repo for downloading the dataset. Additionally, we also use Tiny-Imagenet for large scale experiment. Please place the dataset folder as illustration:
+
+data/
+├── ag_news_csv/
+├── amazon_review_full_csv/
+├── amazon_review_polarity_csv/
+├── CIFAR10/
+├── CIFAR100/
+├── dbpedia_csv/
+├── EMNIST/
+├── FashionMNIST/
+├── KMNIST/
+├── MNIST/
+├── sogou_news_csv/
+├── tiny-imagenet-200/
+├── USPS/
+├── yahoo_answers_csv/
+├── yelp_review_full_csv/
+└── yelp_review_polarity_csv/ 
+
 ## Experiment Scripts
 
 ### Correlation Experiment
@@ -94,4 +115,27 @@ Compute distance for each method
 ```
 python3 text_dist.py --method sotdd --max_size 50000
 python3 text_dist.py --method otdd --max_size 5000
+```
+
+
+### Tiny-Imagenet Split (224x224) Experiment
+
+Train baseline:
+```
+python3 resnet18_baseline.py
+```
+
+Pretrain:
+```
+python3 resnet18_pretrain.py
+```
+
+Transfer learning:
+```
+python3 resnet18_finetune.py
+```
+
+Compute distance for each method
+```
+python3 tiny_image_dist.py --parent_dir saved_split_task --num_samples 5000 --num_projections 500000
 ```
