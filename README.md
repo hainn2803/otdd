@@ -1,4 +1,4 @@
-# Lightspeed Geometric Dataset Distances via Projections
+# Lightspeed Geometric Dataset Distances via Projections [ICML 2025]
 
 ## Environment Installation
 
@@ -135,7 +135,7 @@ Transfer learning:
 python3 resnet18_finetune.py
 ```
 
-Compute distance for each method
+Compute distance for s-OTDD:
 ```
 python3 tiny_image_dist.py --parent_dir saved_split_task --num_samples 5000 --num_projections 500000
 ```
