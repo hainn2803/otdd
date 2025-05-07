@@ -31,7 +31,7 @@ pip install .
 
 ### Datasets:
 We follow the experiments in [Geometric Dataset Distances via Optimal Transport](https://github.com/microsoft/otdd). Please follow the instruction in the repo for downloading the dataset. Additionally, we also use Tiny-Imagenet for large scale experiment. Please place the dataset folder as illustration:
-'''
+```
 data/
 ├── ag_news_csv/
 ├── amazon_review_full_csv/
@@ -49,7 +49,7 @@ data/
 ├── yahoo_answers_csv/
 ├── yelp_review_full_csv/
 └── yelp_review_polarity_csv/ 
-'''
+```
 ## Experiment Scripts
 
 ### Correlation Experiment
